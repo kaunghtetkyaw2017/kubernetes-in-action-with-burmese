@@ -367,3 +367,159 @@ log များကို rotate လုပ်ပြီး နောက်ဆု�
 #### Log များကို file များသို့ ရေးသားသော application များကော ဘယ်လိုလဲ။
 
 သင်၏ application သည် ၎င်း၏ log များကို `stdout` အစား file တစ်ခုသို့ ရေးသားပါက၊ ထို file ကို မည်သို့ access လုပ်ရမည်ကို သင်တွေးတောမိပေမည်။ အကောင်းဆုံးမှာ၊ သင်သည် log များကို ဗဟိုနေရာတစ်ခုတွင် ကြည့်ရှုနိုင်ရန် ဗဟိုချုပ်ကိုင်ထားသော logging system ကို configure လုပ်သင့်သော်လည်း၊ တစ်ခါတစ်ရံတွင် သင်သည် အရာရာကို ရိုးရှင်းစွာထားလိုပြီး log များကို manual access လုပ်ရန် စိတ်မပူပါ။ နောက်လာမည့်ကဏ္ဍနှစ်ခုတွင်၊ `container` မှ log နှင့် အခြား file များကို သင်၏ကွန်ပျူတာသို့ copy ကူးနည်းနှင့် ဆန့်ကျင်ဘက်اتجاهသို့ copy ကူးနည်း၊ နှင့် run နေသော `container` များတွင် command များ execute လုပ်နည်းတို့ကို သင်လေ့လာရပါမည်။ သင်သည် `container` အတွင်းရှိ log file များ သို့မဟုတ် အခြားမည်သည့် file ကိုမဆို ပြသရန် ဤနည်းလမ်းနှစ်ခုစလုံးကို အသုံးပြုနိုင်သည်။
+
+### 5.3.3 Container များသို့ File များ Copy ကူးခြင်းနှင့် Container များမှ File များ Copy ကူးခြင်း
+
+တစ်ခါတစ်ရံတွင် သင်သည် run နေသော `container` တစ်ခုသို့ file တစ်ခုထပ်ထည့်လိုခြင်း သို့မဟုတ် ၎င်းမှ file တစ်ခုကို ရယူလိုပေမည်။ run နေသော `container` များရှိ file များကို ပြင်ဆင်ခြင်းသည် ပုံမှန်အားဖြင့် သင်လုပ်ဆောင်လေ့ရှိသောအရာမဟုတ်ပါ - အနည်းဆုံး production တွင်မဟုတ်ပါ - သို့သော် development ပြုလုပ်နေစဉ်အတွင်း အသုံးဝင်နိုင်သည်။ `Kubectl` သည် သင်၏ local computer နှင့် `container` တစ်ခုအကြား file များ သို့မဟုတ် directory များကို copy ကူးရန် `cp` command ကို ပေးထားသည်။
+
+ဥပမာအားဖြင့်၊ `kiada` `container` မှ `app.js` file ကို သင်၏ local directory သို့ copy ကူးရန်၊ အောက်ပါ command ကို run ပါ-
+
+```bash
+$ kubectl cp kiada:/app.js ./kiada-app.js
+```
+
+ဆန့်ကျင်ဘက်اتجاهသို့ file များကို copy ကူးရန်၊ သင်၏ local file ကို ပထမ argument အဖြစ် သတ်မှတ်ပြီး destination ကို ဒုတိယ argument အဖြစ် သတ်မှတ်ပါ-
+
+```bash
+$ kubectl cp ./my-file.txt kiada:/my-file.txt
+```
+
+> **မှတ်ချက်**
+> `kubectl cp` command သည် သင်၏ `container` တွင် `tar` binary ရှိရန် လိုအပ်သော်လည်း၊ ဤလိုအပ်ချက်သည် အနာဂတ်တွင် ပြောင်းလဲသွားနိုင်သည်။
+
+### 5.3.4 Run နေသော Container များတွင် Command များ Execute လုပ်ခြင်း
+
+`Container` တစ်ခုတွင် run နေသော application တစ်ခုကို debug လုပ်သည့်အခါ၊ `container` နှင့် ၎င်း၏ environment ကို အတွင်းမှ စစ်ဆေးရန် လိုအပ်ပေမည်။ `Kubectl` သည် ဤလုပ်ဆောင်ချက်ကိုလည်း ပံ့ပိုးပေးသည်။ သင်သည် `container` ၏ file system တွင်ရှိသော မည်သည့် binary file ကိုမဆို `kubectl exec` command ကို အသုံးပြု၍ execute လုပ်နိုင်သည်။
+
+#### Container တွင် command တစ်ခုတည်းကို Invoke လုပ်ခြင်း
+
+ဥပမာအားဖြင့်၊ `kiada` `pod` ရှိ `container` တွင် run နေသော process များကို အောက်ပါ command ကို run ခြင်းဖြင့် စာရင်းပြုစုနိုင်သည်-
+
+```bash
+$ kubectl exec kiada -- ps aux
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  0.0  1.3 812860 27356 ?        Ssl  11:54   0:00 node app.js # A
+root       120  0.0  0.1  17500  2128 ?        Rs   12:22   0:00 ps aux      # B
+```
+
+*   **A** `Container` ၏ main process (`node`)
+*   **B** သင် execute လုပ်ခဲ့သော `ps` command
+
+ဤသည်မှာ အခန်း ၂ တွင် run နေသော `container` တစ်ခုရှိ process များကို လေ့လာရန် သင်အသုံးပြုခဲ့သော Docker command ၏ Kubernetes နှင့်ညီမျှသော command ဖြစ်သည်။ ၎င်းသည် သင့်အား မည်သည့် `pod` ရှိ မည်သည့် `container` တွင်မဆို command တစ်ခုကို remote မှ run ရန် ခွင့်ပြုသည်။
+
+Command ၏ argument များကို `kubectl exec` command ၏ argument များနှင့် ခွဲခြားရန် double dash (`--`) ကို အသုံးပြုသည်ကို သတိပြုပါ။ သင် double dash ကို မေ့သွားပါက၊ command ၏ argument များကို `kubectl` ၏ option များအဖြစ် အဓိပ္ပာယ်ဖွင့်ဆိုနိုင်ပြီး၊ ၎င်းသည် မမျှော်လင့်ထားသော အပြုအမူကို ဖြစ်ပေါ်စေနိုင်သည်။ ဥပမာအားဖြင့်၊ `kiada` `pod` တွင် `curl -s localhost:8080` command ကို run ရန် ကြိုးစားကြည့်ပါ-
+
+```bash
+$ kubectl exec kiada curl -s localhost:8080
+The connection to the server localhost:8080 was refused – did you specify the right host or port?
+```
+
+Node.js server က connection ကို ငြင်းပယ်နေသကဲ့သို့ ထင်ရသော်လည်း၊ ပြဿနာမှာ အခြားတစ်နေရာတွင် ရှိနေသည်။ `curl` command ကို ဘယ်တော့မှ execute မလုပ်ပါ။ error ကို `kubectl` ကိုယ်တိုင်က Kubernetes API server ကို `localhost:8080` တွင် စကားပြောရန် ကြိုးစားသည့်အခါ report တင်ခြင်းဖြစ်သည်။ ထိုနေရာတွင် server မရှိပါ။ `kubectl options` command ကို run ပါက၊ `-s` option ကို Kubernetes API server ၏ address နှင့် port ကို သတ်မှတ်ရန် အသုံးပြုနိုင်သည်ကို သင်တွေ့ရပါလိမ့်မည်။ ထို option ကို `curl` သို့ ပေးပို့မည့်အစား `kubectl` က ၎င်း၏ကိုယ်ပိုင် option အဖြစ် လက်ခံလိုက်သည်။ double dash ကို ထည့်ခြင်းဖြင့် ဤသို့မဖြစ်အောင် တားဆီးနိုင်သည်။ ကံကောင်းထောက်မစွာ၊ ဤကဲ့သို့သော အခြေအနေများကို တားဆီးရန်၊ `kubectl` ၏ version အသစ်များသည် သင် double dash ကို မေ့သွားပါက error ပြန်ပေးရန် သတ်မှတ်ထားသည်။
+
+#### Container တွင် interactive shell တစ်ခု Run ခြင်း
+
+ယခင် ဥပမာနှစ်ခုသည် `container` တွင် command တစ်ခုတည်းကို မည်သို့ execute လုပ်နိုင်သည်ကို ပြသခဲ့သည်။ သင်သည် `container` ၏ environment ကို စူးစမ်းလေ့လာရန် command များစွာကို run ရန် လိုအပ်ပါက၊ သင်သည် `container` အတွင်းတွင် shell တစ်ခုကို run နိုင်သည်။
+
+`kiada-ssl` `pod` ၏ `kiada` `container` တွင် shell တစ်ခု run ရန်၊ အောက်ပါ command ကို run ပါ-
+
+```bash
+$ kubectl exec -it kiada-ssl -c kiada -- bash
+root@kiada-ssl:/#
+```
+
+`-i` နှင့် `-t` option များကို အတူတကွ အသုံးပြု၍ `container` ၏ standard input ကို သင်၏ terminal သို့ ချိတ်ဆက်ပြီး ၎င်းကို interactive terminal တစ်ခုအဖြစ် သတ်မှတ်သည်။ ၎င်းသည် သင့်အား shell နှင့် အပြန်အလှန်ဆက်သွယ်နိုင်စေရန် ခွင့်ပြုသည်။
+
+`Container` image အများစုတွင် shell နှင့် အခြားအခြေခံ Unix command များပါဝင်သော်လည်း၊ image တိုင်းတွင် ထိုသို့မဟုတ်ပါ။ image များကို သေးငယ်အောင်ထားရန်နှင့် `container` တွင် security ကို တိုးမြှင့်ရန်အတွက်၊ production တွင် အသုံးပြုသော `container` အများစုသည် `container` ၏ primary process အတွက် လိုအပ်သော binary file များမှလွဲ၍ အခြားမည်သည့် binary file များကိုမှ မပါဝင်ပါ။ ၎င်းသည် attack surface ကို သိသိသာသာ လျှော့ချပေးသော်လည်း၊ production `container` များတွင် shell များ သို့မဟုတ် အခြား tool များကို run ၍မရဟု ဆိုလိုသည်။ ကံကောင်းထောက်မစွာ၊ ephemeral containers ဟုခေါ်သော Kubernetes feature အသစ်သည် run နေသော `container` များကို ၎င်းတို့အတွင်းတွင် debug `container` တစ်ခုချိတ်ဆက်ခြင်းဖြင့် debug လုပ်ရန် ခွင့်ပြုသည်။
+
+### 5.3.5 Run နေသော Container တစ်ခုသို့ Attach လုပ်ခြင်း
+
+`kubectl attach` command သည် run နေသော `container` တစ်ခုနှင့် အပြန်အလှန်ဆက်သွယ်ရန် နောက်တစ်နည်းဖြစ်သည်။ ၎င်းသည် `container` ရှိ main process ၏ standard input, output နှင့် error stream များနှင့် ချိတ်ဆက်သည်။
+
+၎င်းသည် `kubectl exec` နှင့် မည်သို့ကွာခြားသည်ကို သင်တွေးတောမိပေမည်။ `exec` command ကို အသုံးပြုသည့်အခါ၊ သင်သည် `container` တွင် process အသစ်တစ်ခုကို run သည်။ `attach` command ဖြင့်၊ သင်သည် `container` ၏ main process နှင့် ချိတ်ဆက်သည်။
+
+`kiada-ssl` `pod` ၏ `kiada` `container` သို့ attach လုပ်ရန်၊ အောက်ပါ command ကို run ပါ-
+
+```bash
+$ kubectl attach kiada-ssl -c kiada
+```
+
+ယခု၊ အခြား terminal တစ်ခုတွင် `curl` ကို အသုံးပြု၍ application သို့ HTTP request အသစ်များ ပေးပို့သည့်အခါ၊ application က standard output သို့ log ရေးသော line များကို `kubectl attach` command execute လုပ်ထားသော terminal တွင်လည်း ပေါ်လာသည်ကို သင်တွေ့ရပါလိမ့်မည်။
+
+#### Application ၏ Standard Input သို့ ရေးသားရန် kubectl attach ကို အသုံးပြုခြင်း
+
+Kiada application version `0.1` သည် standard input stream မှ မဖတ်သော်လည်း၊ ၎င်းကိုပြုလုပ်သော version `0.2` ၏ source code ကို စာအုပ်၏ code archive တွင် သင်ရှာတွေ့နိုင်ပါသည်။ ဤ version သည် application ၏ standard input stream သို့ ရေးသားခြင်းဖြင့် status message တစ်ခုကို set လုပ်ရန် ခွင့်ပြုသည်။ ဤ status message ကို application ၏ response တွင် ထည့်သွင်းပါလိမ့်မည်။ ဤ application version ကို `pod` အသစ်တစ်ခုတွင် deploy လုပ်ပြီး status message ကို set လုပ်ရန် `kubectl attach` command ကို အသုံးပြုကြပါစို့။
+
+`kiada-0.2/` directory တွင် image ကို build ရန် လိုအပ်သော artifact များကို သင်ရှာတွေ့နိုင်သည်။ သင်သည် ကြိုတင် build လုပ်ထားသော image `docker.io/luksa/kiada:0.2` ကိုလည်း အသုံးပြုနိုင်သည်။ `pod` manifest သည် `Chapter05/pod.kiada-stdin.yaml` file တွင် ရှိပြီး အောက်ပါ listing တွင် ပြသထားသည်။ ၎င်းတွင် `stdin` field ကို `true` ဟု set ထားသောကြောင့် standard input stream ကို ဖွင့်ထားရန် လိုအပ်ကြောင်း Kubernetes အား ပြောပြသည်။
+
+**Listing 5.2။ stdin ဖွင့်ထားသော pod manifest တစ်ခု**
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kiada-stdin
+spec:
+  containers:
+  - name: kiada
+    image: luksa/kiada:0.2
+    stdin: true                 # A
+    ports:
+    - containerPort: 8080
+```
+
+*   **A** `Container` ၏ standard input ကို ဖွင့်ထားရန် ဤ field ကို `true` ဟု set ရန် လိုအပ်သည်။
+
+Standard input ကို ဖွင့်ထားခြင်းသည် resource များကို သုံးစွဲသည်။ ၎င်းကို `false` ဟု default ထားရှိသည်။ `stdin: true` ကို သင်မသတ်မှတ်ပါက၊ `container` ၏ standard input stream ကို သင် attach လုပ်၍မရပါ။ သင်သည် standard input stream အတွက် buffer တစ်ခုကိုလည်း allocate လုပ်ရန် လိုအပ်သည်၊ သို့မဟုတ်ပါက application သည် ၎င်းမှဖတ်ရန် ကြိုးစားသည့်အခါ အမြဲတမ်း `EOF` ကို လက်ခံရရှိလိမ့်မည်။
+
+ဤ manifest file မှ `pod` ကို `kubectl apply` command ဖြင့် ဖန်တီးပါ-
+
+```bash
+$ kubectl apply -f pod.kiada-stdin.yaml
+pod/kiada-stdin created
+```
+
+Application နှင့် ဆက်သွယ်မှုပြုလုပ်နိုင်ရန်၊ `kubectl port-forward` command ကို ထပ်မံအသုံးပြုပါ၊ သို့သော် local port `8080` ကို ယခင် execute လုပ်ခဲ့သော `port-forward` command က အသုံးပြုနေဆဲဖြစ်သောကြောင့်၊ သင်သည် ၎င်းကို terminate လုပ်ရမည် သို့မဟုတ် `pod` အသစ်သို့ forward လုပ်ရန် မတူညီသော local port တစ်ခုကို ရွေးချယ်ရမည်။ ၎င်းကို အောက်ပါအတိုင်း သင်ပြုလုပ်နိုင်သည်-
+
+```bash
+$ kubectl port-forward kiada-stdin 8888:8080
+Forwarding from 127.0.0.1:8888 -> 8080
+Forwarding from [::1]:8888 -> 8080
+```
+
+command-line argument `8888:8080` သည် command အား local port `8888` ကို `pod` ၏ port `8080` သို့ forward လုပ်ရန် ညွှန်ကြားသည်။
+
+ယခု သင်သည် application ကို `http://localhost:8888` တွင် access လုပ်နိုင်သည်-
+
+```bash
+$ curl localhost:8888
+Kiada version 0.2. Request processed by "kiada-stdin". Client IP: ::ffff:127.0.0.1
+```
+
+`kubectl attach` ကို အသုံးပြု၍ status message ကို set လုပ်ကြပါစို့။ standard input stream သို့ attach လုပ်ရန်၊ သင်သည် `-i` flag ကိုလည်း သတ်မှတ်ရန် လိုအပ်သည်-
+
+```bash
+$ kubectl attach -i kiada-stdin
+```
+
+ယခု သင်သည် status message ကို terminal တွင် ရိုက်ထည့်ပြီး `ENTER` key ကို နှိပ်နိုင်သည်။ ဥပမာအားဖြင့်၊ အောက်ပါ message ကို ရိုက်ထည့်ပါ-
+
+`This is my custom status message.`
+
+Application သည် message အသစ်ကို standard output သို့ print ထုတ်သည်-
+
+`Status message set to: This is my custom status message.`
+
+Application သည် ယခုအခါ message ကို ၎င်း၏ HTTP request များသို့ response များတွင် ထည့်သွင်းခြင်းရှိမရှိ ကြည့်ရှုရန်၊ `curl` command ကို ထပ်မံ execute လုပ်ပါ သို့မဟုတ် သင်၏ web browser တွင် page ကို refresh လုပ်ပါ-
+
+```bash
+$ curl localhost:8888
+Kiada version 0.2. Request processed by "kiada-stdin". Client IP: ::ffff:127.0.0.1
+This is my custom status message. # A
+```
+
+*   **A** Status message ကို HTTP response တွင် ထည့်သွင်းထားသည်။
+
+`kubectl attach` command run နေသော terminal တွင် နောက်ထပ် line တစ်ခုရိုက်ထည့်ခြင်းဖြင့် status message ကို ထပ်မံပြောင်းလဲနိုင်သည်။ `attach` command မှ ထွက်ရန်၊ `Control-C` သို့မဟုတ် ညီမျှသော key ကို နှိပ်ပါ။
+
+> **မှတ်ချက်**
+> `Container` definition ရှိ နောက်ထပ် field တစ်ခုဖြစ်သော `stdinOnce` သည် attach session ပြီးဆုံးသွားသောအခါ standard input channel ကို ပိတ်သင့်သလားကို ဆုံးဖြတ်သည်။ ၎င်းကို default အားဖြင့် `false` ဟု set ထားပြီး၊ `kubectl attach` session တိုင်းတွင် standard input ကို အသုံးပြုရန် ခွင့်ပြုသည်။ သင် `true` ဟု set ထားပါက၊ ပထမ client detach ဖြစ်သွားသည်နှင့် standard input ကို ပိတ်သွားမည်ဖြစ်သည်။
