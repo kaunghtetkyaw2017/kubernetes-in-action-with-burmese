@@ -523,3 +523,429 @@ This is my custom status message. # A
 
 > **မှတ်ချက်**
 > `Container` definition ရှိ နောက်ထပ် field တစ်ခုဖြစ်သော `stdinOnce` သည် attach session ပြီးဆုံးသွားသောအခါ standard input channel ကို ပိတ်သင့်သလားကို ဆုံးဖြတ်သည်။ ၎င်းကို default အားဖြင့် `false` ဟု set ထားပြီး၊ `kubectl attach` session တိုင်းတွင် standard input ကို အသုံးပြုရန် ခွင့်ပြုသည်။ သင် `true` ဟု set ထားပါက၊ ပထမ client detach ဖြစ်သွားသည်နှင့် standard input ကို ပိတ်သွားမည်ဖြစ်သည်။
+
+## 5.4 Pod တစ်ခုတွင် Container များစွာ Run ခြင်း
+
+အခန်း 5.1 တွင် `pod` တစ်ခုတွင် `container` တစ်ခုထက်ပို၍ run ရန် အကြောင်းရင်းများကို သင်လေ့လာခဲ့ပြီး sidecar `container` concept ကို မိတ်ဆက်ခဲ့သည်။ ယခု သင်သည် Node.js application ကိုယ်တိုင်ကို မပြောင်းလဲဘဲ HTTPS support ထပ်ထည့်ရန် Kiada `pod` သို့ Envoy proxy sidecar တစ်ခုကို ထပ်ထည့်ပါမည်။
+
+### 5.4.1 Kiada Node.js application ကို Envoy proxy အသုံးပြု၍ တိုးချဲ့ခြင်း
+
+Application ၏ architecture အသစ်သည် မည်သို့မည်ပုံဖြစ်မည်ကို ကျွန်ုပ်အကျဉ်းချုံးရှင်းပြပါမည်။ နောက်ပုံတွင် ပြထားသည့်အတိုင်း၊ `pod` တွင် `container` နှစ်ခုပါဝင်မည်ဖြစ်သည် - Node.js နှင့် Envoy `container` အသစ်။ Node.js `container` သည် HTTP request များကို တိုက်ရိုက်ဆက်လက်ကိုင်တွယ်မည်ဖြစ်သော်လည်း HTTPS request များကို Envoy မှ ကိုင်တွယ်မည်ဖြစ်သည်။ incoming HTTPS request တစ်ခုချင်းစီအတွက်၊ Envoy သည် local loopback device (`localhost` IP address မှတစ်ဆင့်) မှတစ်ဆင့် Node.js application သို့ ပေးပို့မည့် HTTP request အသစ်တစ်ခုကို ဖန်တီးမည်ဖြစ်သည်။
+
+*ပုံ ၅.၁၀။ Pod ၏ container များနှင့် network interface များ၏ အသေးစိတ်မြင်ကွင်း*
+
+Envoy သည် နောက်အခန်းရှိ လေ့ကျင့်ခန်းအချို့တွင် အသုံးဝင်မည့် web-based administration interface တစ်ခုကိုလည်း ပံ့ပိုးပေးသည်။
+
+သင်သည် TLS support ကို application ၏ JavaScript code ထဲတွင် ထည့်သွင်းပါက၊ ဤအရာအားလုံးကို application တစ်ခုတည်းဖြင့် ရရှိနိုင်မည်မှာ ရှင်းနေပါသည်။ သို့သော်၊ သင်သည် application ၏ source code ကို ပြောင်းလဲရန် ခက်ခဲသော သို့မဟုတ် မဖြစ်နိုင်သော အခြေအနေများတွင်၊ Envoy proxy ကို အသုံးပြုခြင်းသည် ပိုမိုမြန်ဆန်လွယ်ကူသော ဖြေရှင်းချက်ဖြစ်နိုင်သည်။ ၎င်းသည် Envoy မှ ပံ့ပိုးပေးသော အခြား feature များစွာကို သင်ထပ်ထည့်နိုင်သည့် ကောင်းမွန်သောအစပြုမှတ်တစ်ခုကိုလည်း ပေးသည်။ ပိုမိုလေ့လာလိုပါက `envoyproxy.io` ရှိ Envoy proxy documentation ကို ကိုးကားပါ။
+
+### 5.4.2 Pod သို့ Envoy proxy ထပ်ထည့်ခြင်း
+
+`Container` နှစ်ခုပါသော `pod` အသစ်တစ်ခုကို သင်ဖန်တီးပါမည်။ သင့်တွင် Node.js `container` ရှိပြီးဖြစ်သော်လည်း Envoy ကို run မည့် `container` တစ်ခုလည်း လိုအပ်သည်။
+
+#### Envoy container image ကို ဖန်တီးခြင်း
+
+Proxy ၏ author များသည် တရားဝင် Envoy proxy `container` image ကို Docker Hub တွင် ထုတ်ဝေထားသည်။ သင်သည် ဤ image ကို တိုက်ရိုက်အသုံးပြုနိုင်သော်လည်း၊ configuration, certificate နှင့် private key file များကို `container` ရှိ Envoy process သို့ တစ်နည်းနည်းဖြင့် ပံ့ပိုးပေးရန် လိုအပ်မည်ဖြစ်သည်။ ၎င်းကို မည်သို့ပြုလုပ်ရမည်ကို အခန်း ၇ တွင် သင်လေ့လာရပါမည်။ ယခုအချိန်တွင်၊ သင်သည် ဤ file သုံးခုစလုံးပါဝင်ပြီးသော image တစ်ခုကို အသုံးပြုပါမည်။
+
+ကျွန်ုပ်သည် image ကို ဖန်တီးပြီး `docker.io/luksa/kiada-ssl-proxy:0.1` တွင် ရရှိနိုင်အောင် ပြုလုပ်ထားပြီးဖြစ်သော်လည်း၊ သင်ကိုယ်တိုင် build လုပ်လိုပါက၊ `Chapter05/kiada-ssl-proxy-image/` directory တွင် လိုအပ်သော file များကို သင်ရှာတွေ့နိုင်ပါသည်။
+
+#### Container နှစ်ခုပါသော pod တစ်ခု ဖန်တီးခြင်း
+
+`Container` နှစ်ခုပါသော `pod` ၏ manifest သည် အောက်ပါ listing တွင် ပြသထားသည်။ ၎င်းကို `Chapter05/pod.kiada-ssl.yaml` file တွင် သင်ရှာတွေ့နိုင်သည်။
+
+**Listing 5.3။ kiada-ssl pod ၏ Manifest**
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kiada-ssl
+spec:
+  containers:
+  - name: kiada                   # A
+    image: luksa/kiada:0.2        # A
+    ports:                        # A
+    - name: http                  # A
+      containerPort: 8080         # A
+  - name: envoy                   # B
+    image: luksa/kiada-ssl-proxy:0.1 # B
+    ports:                        # B
+    - name: https                 # B
+      containerPort: 8443         # B
+    - name: admin                 # B
+      containerPort: 9901         # B
+```
+
+*   **A** ပထမ `container` သည် kiada application ကို run သည်။
+*   **B** ဒုတိယ `container` သည် envoy proxy ကို run သည်။
+
+ဤ `pod` ၏အမည်မှာ `kiada-ssl` ဖြစ်သည်။ ၎င်းတွင် `kiada` နှင့် `envoy` ဟုခေါ်သော `container` နှစ်ခုရှိသည်။ manifest သည် အပိုင်း 5.2.1 ရှိ manifest ထက် အနည်းငယ်သာ ပိုရှုပ်ထွေးသည်။ အသစ်ပါဝင်သော field များမှာ port name များဖြစ်ပြီး၊ manifest ကို ဖတ်ရှုသူတိုင်း port တစ်ခုချင်းစီ၏ ရည်ရွယ်ချက်ကို နားလည်နိုင်စေရန် ထည့်သွင်းထားသည်။ Service တစ်ခုတွင် port များစွာကို expose လုပ်သည့်အခါ port name များသည် လိုအပ်ပါသည်။
+
+#### Multi-container pod နှင့် အပြန်အလှန်ဆက်သွယ်ခြင်း
+
+`kubectl apply` ကို အသုံးပြု၍ `pod` ကို ဖန်တီးပြီးနောက်၊ `kubectl port-forward` command ကို အသုံးပြု၍ port သုံးခုစလုံးသို့ forwarding ကို အောက်ပါအတိုင်း enable လုပ်နိုင်သည်-
+
+```bash
+$ kubectl port-forward kiada-ssl 8080 8443 9901
+Forwarding from 127.0.0.1:8080 -> 8080
+Forwarding from [::1]:8080 -> 8080
+Forwarding from 127.0.0.1:8443 -> 8443
+Forwarding from [::1]:8443 -> 8443
+Forwarding from 127.0.0.1:9901 -> 9901
+Forwarding from [::1]:9901 -> 9901
+```
+
+ပထမဦးစွာ၊ သင်၏ browser တွင် `http://localhost:8080` URL ကိုဖွင့်ခြင်းဖြင့် သို့မဟုတ် `curl` ကို အသုံးပြု၍ application နှင့် HTTP မှတစ်ဆင့် ဆက်သွယ်နိုင်ကြောင်း အတည်ပြုပါ-
+
+```bash
+$ curl localhost:8080
+Kiada version 0.2. Request processed by "kiada-ssl". Client IP: ::ffff:127.0.0.1
+```
+
+၎င်းအလုပ်လုပ်ပါက၊ သင်သည် application ကို `https://localhost:8443` တွင် HTTPS မှတစ်ဆင့် access လုပ်ရန်လည်း ကြိုးစားနိုင်သည်။ `curl` ဖြင့် အောက်ပါအတိုင်း သင်ပြုလုပ်နိုင်သည်-
+
+```bash
+$ curl https://localhost:8443 --insecure
+Kiada version 0.2. Request processed by "kiada-ssl". Client IP: ::ffff:127.0.0.1
+```
+
+အောင်မြင်သွားပြီ! Envoy proxy သည် တာဝန်ကို ကောင်းမွန်စွာ ကိုင်တွယ်ဖြေရှင်းပေးသည်။ သင်၏ application သည် ယခုအခါ sidecar `container` ကို အသုံးပြု၍ HTTPS ကို support လုပ်နေပြီဖြစ်သည်။
+
+> **`--insecure` option ကို အဘယ်ကြောင့် အသုံးပြုရသနည်း။**
+> `--insecure` option ကို အသုံးပြုရသည့် အကြောင်းရင်းနှစ်ခုရှိသည်။ ပထမအကြောင်းရင်းမှာ `curl` သည် server ၏ certificate ကို default အားဖြင့် trust မလုပ်သောကြောင့်ဖြစ်သည်၊ အကြောင်းမှာ ၎င်းသည် self-signed ဖြစ်သောကြောင့်ဖြစ်သည်။ ဒုတိယအကြောင်းရင်းမှာ certificate သည် `localhost` အတွက် မဟုတ်ဘဲ `kiada.example.com` host အတွက် ထုတ်ပေးထားသောကြောင့်ဖြစ်သည်။ `--insecure` option ကို အသုံးပြုမည့်အစား၊ သင်သည် `curl` အား ဤ certificate ကို trust လုပ်ရန်နှင့် `kiada.example.com` ကို `localhost` သို့ resolve လုပ်ရန် ညွှန်ကြားနိုင်သည်-
+> `$ curl https://kiada.example.com --resolve kiada.example.com:443:127.0.0.1 --cacert certs/example-com.crt`
+> ၎င်းသည် ရိုက်ရန်အလွန်များသည်။ ထို့ကြောင့် ကျွန်တော်သည် `--insecure` option သို့မဟုတ် ပိုတိုသော `-k` variant ကို အသုံးပြုရခြင်းကို ပိုနှစ်သက်သည်။
+
+#### Container များစွာပါသော pod များ၏ log များကို ပြသခြင်း
+
+`kiada-ssl` `pod` တွင် `container` နှစ်ခုပါဝင်သောကြောင့်၊ log များကို ပြသလိုပါက၊ `--container` သို့မဟုတ် `-c` option ကို အသုံးပြု၍ `container` ၏အမည်ကို သတ်မှတ်ရန် လိုအပ်သည်။ ဥပမာအားဖြင့်၊ `kiada` `container` ၏ log များကို ကြည့်ရန်၊ အောက်ပါ command ကို run ပါ-
+
+```bash
+$ kubectl logs kiada-ssl -c kiada
+```
+
+Envoy proxy သည် `envoy` ဟုအမည်ပေးထားသော `container` တွင် run နေသောကြောင့်၊ ၎င်း၏ log များကို အောက်ပါအတိုင်း ပြသသည်-
+
+```bash
+$ kubectl logs kiada-ssl -c envoy
+```
+
+တစ်နည်းအားဖြင့်၊ `--all-containers` option ဖြင့် `container` နှစ်ခုလုံး၏ log များကို ပြသနိုင်သည်-
+
+```bash
+$ kubectl logs kiada-ssl --all-containers
+```
+
+သင်သည် ဤ command များကို အပိုင်း 5.3.2 တွင် ရှင်းပြထားသော အခြား option များနှင့် ပေါင်းစပ်နိုင်သည်။
+
+#### Multi-container pod များ၏ Container များတွင် Command များ Run ခြင်း
+
+`kubectl exec` command ကို အသုံးပြု၍ `pod` ၏ `container` များထဲမှ တစ်ခုတွင် shell သို့မဟုတ် အခြား command တစ်ခုကို run လိုပါက၊ `--container` သို့မဟုတ် `-c` option ကို အသုံးပြု၍ `container` name ကိုလည်း သတ်မှတ်ရန် လိုအပ်သည်။ ဥပမာအားဖြင့်၊ `envoy` `container` တွင် shell run ရန်၊ အောက်ပါ command ကို run ပါ-
+
+```bash
+$ kubectl exec -it kiada-ssl -c envoy -- bash
+```
+
+## 5.5 Pod Startup တွင် နောက်ထပ် Container များကို Run ခြင်း
+
+`Pod` တစ်ခုတွင် `container` တစ်ခုထက်ပို၍ ပါဝင်သောအခါ၊ `container` အားလုံးသည် parallel အတိုင်း စတင်လည်ပတ်ကြသည်။ Kubernetes သည် `container` တစ်ခုက အခြား `container` တစ်ခုပေါ်တွင် မှီခိုနေကြောင်း သတ်မှတ်ပေးသည့် mechanism ကို မပံ့ပိုးသေးပါ၊ ၎င်းသည် တစ်ခုမစတင်မီ အခြားတစ်ခုကို စတင်ရန် သေချာစေမည်ဖြစ်သည်။ သို့သော်၊ Kubernetes သည် `pod` ၏ main `container` များမစတင်မီ `pod` ကို initialize လုပ်ရန် `container` အစဉ်လိုက် run ရန် ခွင့်ပြုသည်။ ဤအထူး `container` အမျိုးအစားကို ဤကဏ္ဍတွင် ရှင်းပြထားသည်။
+
+### 5.5.1 Init container များကို မိတ်ဆက်ခြင်း
+
+`Pod` manifest တစ်ခုသည် `pod` စတင်သည့်အခါနှင့် `pod` ၏ normal `container` များမစတင်မီ run ရန် `container` စာရင်းတစ်ခုကို သတ်မှတ်နိုင်သည်။ ဤ `container` များသည် `pod` ကို initialize လုပ်ရန် ရည်ရွယ်ပြီး **init containers** ဟု သင့်လျော်စွာ ခေါ်တွင်သည်။ အောက်ပါပုံတွင် ပြထားသည့်အတိုင်း၊ ၎င်းတို့သည် တစ်ခုပြီးတစ်ခု run ကြပြီး `pod` ၏ main `container` များမစတင်မီ အားလုံးအောင်မြင်စွာ ပြီးဆုံးရမည်ဖြစ်သည်။
+
+*ပုံ ၅.၁၁။ Pod တစ်ခု၏ init နှင့် regular container များ မည်သို့စတင်သည်ကို ပြသသည့် အချိန်ဇယား*
+
+`Init container` များသည် `pod` ၏ regular `container` များနှင့်တူညီသော image format နှင့် standard `container` feature များကို အသုံးပြုသောကြောင့် ၎င်းတို့သည် `pod` ၏ regular `container` များနှင့်တူသည်။ သို့သော်၊ `init container` များ၏ ရည်ရွယ်ချက်မှာ အကန့်အသတ်မရှိ run ရန်မဟုတ်ဘဲ၊ ၎င်းတို့၏ task ကို ပြီးဆုံးသည်အထိ run ရန်ဖြစ်သည်။
+
+#### Init container များအတွက် အသုံးများသော case များ
+
+`Init container` များကို အောက်ပါအခြေအနေများတွင် အသုံးပြုနိုင်သည်-
+
+*   **`Pod` ၏ filesystem ကို data များဖြင့် ဖြည့်တင်းခြင်း။** ဥပမာအားဖြင့်၊ `init container` တစ်ခုသည် external source မှ data များကို ဒေါင်းလုဒ်လုပ်ပြီး main `container` အတွက် ပြင်ဆင်နိုင်သည်။
+*   **`Pod` ၏ networking system ကို Initialize လုပ်ခြင်း။** `Pod` ၏ `container` အားလုံးသည် တူညီသော network namespace များကို မျှဝေသုံးစွဲသောကြောင့်၊ `init container` တစ်ခုမှ ၎င်းကို ပြုလုပ်သော ပြောင်းလဲမှုများသည် main `container` ကိုလည်း သက်ရောက်မှုရှိသည်။
+*   **`Pod` ၏ main `container` များမစတင်မီ ကြိုတင်လိုအပ်ချက်တစ်ခု ပြည့်မီသည်အထိ နှောင့်နှေးခြင်း။** ဥပမာအားဖြင့်၊ main `container` သည် အခြား service တစ်ခုရရှိနိုင်မှသာ စတင်ရန် မှီခိုနေပါက၊ `init container` တစ်ခုသည် ဤ service အဆင်သင့်ဖြစ်သည်အထိ block လုပ်ထားနိုင်သည်။
+*   **`Pod` စတင်တော့မည်ဖြစ်ကြောင်း external service တစ်ခုကို အသိပေးခြင်း။** Application instance အသစ်တစ်ခု စတင်သည့်အခါ external system တစ်ခုကို အသိပေးရန်လိုအပ်သော အထူးအခြေအနေများတွင်၊ ဤ notification ကို ပေးပို့ရန် `init container` ကို အသုံးပြုနိုင်သည်။
+
+သင်သည် ဤ operation များကို main `container` ထဲတွင်ပင် လုပ်ဆောင်နိုင်သော်လည်း၊ `init container` ကို အသုံးပြုခြင်းသည် တစ်ခါတစ်ရံ ပိုကောင်းသော option ဖြစ်ပြီး အခြားအကျိုးကျေးဇူးများလည်း ရှိနိုင်သည်၊ ဥပမာ-
+
+*   **Logic ကို ခွဲခြားထားခြင်း။** Main `container` မှ initialization logic ကို ခွဲထုတ်ခြင်းဖြင့်၊ main `container` image ကို အခြားနေရာများတွင် ပြန်လည်အသုံးပြုနိုင်ပြီး၊ initialization logic ကို အခြားသူများမှ တီထွင်ပြီး စီမံခန့်ခွဲနိုင်သည်။
+*   **Security ကို တိုးမြှင့်ခြင်း။** Initialization အတွက် လိုအပ်သော tool များနှင့် credential များကို main `container` image တွင် ထည့်သွင်းရန်မလိုသောကြောင့်၊ application ၏ attack surface ကို လျှော့ချနိုင်သည်။ ဥပမာအားဖြင့်၊ application ကို external service တစ်ခုတွင် register လုပ်ရန် လိုအပ်သည်ဆိုပါစို့။ ထိုသို့ပြုလုပ်ရန်၊ ၎င်း၏ filesystem တွင် secret token တစ်ခုရှိရန် လိုအပ်သည်။ Main `container` တွင် run နေသော application တွင် attacker တစ်ဦးက filesystem ရှိ မည်သည့် file ကိုမဆို ဖတ်ရန်ခွင့်ပြုသည့် အားနည်းချက်တစ်ခုရှိပါက၊ attacker သည် ဤ token ကို ရရှိသွားနိုင်သည်။ Initialization ကို `init container` မှ လုပ်ဆောင်ခြင်းဖြင့်၊ token သည် `init container` ၏ filesystem တွင်သာ ရှိရန်လိုအပ်ပြီး၊ attacker တစ်ဦးက အလွယ်တကူ ထိုးဖောက်ဝင်ရောက်နိုင်မည်မဟုတ်ပါ။
+
+### 5.5.2 Pod သို့ Init container များ ထပ်ထည့်ခြင်း
+
+`Pod` manifest တစ်ခုတွင်၊ `init container` များကို `spec` section ရှိ `initContainers` field တွင် သတ်မှတ်သည်၊ regular `container` များကို `containers` field တွင် သတ်မှတ်သကဲ့သို့ပင်။
+
+#### Pod manifest တွင် init container များကို သတ်မှတ်ခြင်း
+
+`kiada` `pod` သို့ `init container` နှစ်ခုထပ်ထည့်သည့် ဥပမာကို ကြည့်ကြပါစို့။ ပထမ `init container` သည် initialization procedure တစ်ခုကို တုပသည်။ ၎င်းသည် ၅ စက္ကန့်ကြာ run ပြီး standard output သို့ text line အနည်းငယ် print ထုတ်သည်။
+
+ဒုတိယ `init container` သည် `ping` command ကို အသုံးပြု၍ `pod` အတွင်းမှ သတ်မှတ်ထားသော IP address တစ်ခုကို reach လုပ်နိုင်မလား စစ်ဆေးခြင်းဖြင့် network connectivity test တစ်ခုကို လုပ်ဆောင်သည်။
+
+**Listing 5.4။ kiada-init pod ၏ manifest**
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kiada-init
+spec:
+  initContainers:                # A
+  - name: init-demo              # B
+    image: luksa/init-demo:0.1  # B
+  - name: network-check          # C
+    image: luksa/network-connectivity-checker:0.1 # C
+  containers:                    # D
+  - name: kiada                  # D
+    image: luksa/kiada:0.2      # D
+    stdin: true                 # D
+    ports:                      # D
+    - name: http                # D
+      containerPort: 8080       # D
+  - name: envoy                  # D
+    image: luksa/kiada-ssl-proxy:0.1 # D
+    ports:                      # D
+    - name: https               # D
+      containerPort: 8443       # D
+```
+
+*   **A** `Init container` များကို ဤနေရာတွင် သတ်မှတ်သည်။
+*   **B** ပထမ `init container`
+*   **C** ဒုတိယ `init container`
+*   **D** Regular `container` များ
+
+#### Init container များ အလုပ်လုပ်ပုံကို ကြည့်ရှုခြင်း
+
+`Pod` စတင်လာသည့်အခါ ဘာတွေဖြစ်ပျက်သည်ကို စောင့်ကြည့်ရန်၊ terminal နှစ်ခုဖွင့်ပါ။ ပထမတစ်ခုတွင်၊ `pod` ၏ status ကို စောင့်ကြည့်ရန် အောက်ပါ command ကို run ပါ-
+
+```bash
+$ kubectl get pod kiada-init -w
+```
+
+ဒုတိယ terminal တွင်၊ event များကို စောင့်ကြည့်ရန် အောက်ပါ command ကို run ပါ-
+
+```bash
+$ kubectl get events -w
+```
+
+အဆင်သင့်ဖြစ်လျှင် `apply` command ကို run ခြင်းဖြင့် `pod` ကို ဖန်တီးပါ-
+
+```bash
+$ kubectl apply -f pod.kiada-init.yaml
+```
+
+#### Init container များပါသော pod တစ်ခု၏ startup ကို စစ်ဆေးခြင်း
+
+`Pod` စတင်လာသည့်အခါ `kubectl get events -w` command မှ ပြသသော event များကို စစ်ဆေးပါ-
+
+```bash
+TYPE      REASON      MESSAGE
+Normal    Scheduled   Successfully assigned pod to worker2
+Normal    Pulling     Pulling image "luksa/init-demo:0.1"          # A
+Normal    Pulled      Successfully pulled image                    # A
+Normal    Created     Created container init-demo                  # A
+Normal    Started     Started container init-demo                  # A
+Normal    Pulling     Pulling image "luksa/network-connec...       # B
+Normal    Pulled      Successfully pulled image                    # B
+Normal    Created     Created container network-check              # B
+Normal    Started     Started container network-check              # B
+Normal    Pulled      Container image "luksa/kiada:0.1" already present on machine # C
+Normal    Created     Created container kiada                      # C
+Normal    Started     Started container kiada                      # C
+Normal    Pulled      Container image "luksa/kiada-ssl-proxy:0.1" already present # D
+Normal    Created     Created container envoy                      # D
+Normal    Started     Started container envoy                      # D
+```
+
+*   **A** `init-demo` `container` ကို စတင်ခြင်း
+*   **B** `network-check` `container` ကို စတင်ခြင်း
+*   **C** `kiada` `container` ကို စတင်ခြင်း
+*   **D** `envoy` `container` ကို စတင်ခြင်း
+
+ယခု `pod` ၏ status ပြောင်းလဲမှုများကို ကြည့်ရှုပါ။
+
+```bash
+$ kubectl get po kiada-init -w
+NAME         READY   STATUS     RESTARTS   AGE
+kiada-init   0/2     Init:0/2   0          2s   # A
+kiada-init   0/2     Init:1/2   0          6s   # B
+kiada-init   0/2     PodInitializing   0   7s   # C
+kiada-init   2/2     Running           0   8s   # D
+```
+
+*   **A** ပထမ `init container` run နေသည်။
+*   **B** ဒုတိယ `init container` run နေသည်။
+*   **C** `Init container` များ ပြီးဆုံးသွားပြီ။
+*   **D** `Pod` ၏ regular `container` များ run နေပြီ။
+
+Listing တွင်ပြထားသည့်အတိုင်း၊ `init container` များ run နေချိန်တွင်၊ `pod` ၏ status သည် ပြီးဆုံးသွားသော `init container` အရေအတွက်နှင့် စုစုပေါင်းအရေအတွက်ကို ပြသသည်။ `init container` အားလုံးပြီးဆုံးသွားသောအခါ၊ `pod` ၏ status ကို `PodInitializing` အဖြစ်ပြသသည်။ ဤအချိန်တွင် main `container` များ၏ image များကို pull လုပ်သည်။ `container` များစတင်သောအခါ၊ status သည် `Running` သို့ ပြောင်းလဲသွားသည်။
+
+### 5.5.3 Init container များကို စစ်ဆေးခြင်း
+
+Regular `container` များကဲ့သို့ပင်၊ သင်သည် `kubectl exec` ကို အသုံးပြု၍ run နေသော `init container` တွင် နောက်ထပ် command များကို run နိုင်ပြီး `kubectl logs` ကို အသုံးပြု၍ log များကို ပြသနိုင်သည်။
+
+#### Init container တစ်ခု၏ log များကို ပြသခြင်း
+
+`Init container` တစ်ခုစီ ရေးသားနိုင်သော standard နှင့် error output ကို regular `container` များအတွက်ကဲ့သို့ပင် ဖမ်းယူထားသည်။ `Init container` တစ်ခု၏ log များကို `-c` option ဖြင့် `container` ၏အမည်ကို သတ်မှတ်ခြင်းဖြင့် `kubectl logs` command ကို အသုံးပြု၍ ပြသနိုင်သည်-
+
+```bash
+$ kubectl logs kiada-init -c init-demo
+```
+
+`Init container` များသည် များသောအားဖြင့် လျင်မြန်စွာ ပြီးဆုံးသွားသောကြောင့်၊ log များကို ရယူရန် သင်သည် ဤ command ကို လျင်မြန်စွာ run ရန် လိုအပ်သည်။ ၎င်း ပြီးဆုံးသွားပြီးနောက်တွင် သင် log များကို ကြည့်ရှုနိုင်သေးသည်။
+
+`Init container` တစ်ခု fail ဖြစ်ပြီး ၎င်းဘာကြောင့်ဖြစ်ရသည်ကို သင်ရှာဖွေလိုပါက၊ `kubectl get events` ကို အသုံးပြု၍ ၎င်း၏ status ကို စစ်ဆေးခြင်းသည် ပိုမိုလွယ်ကူသောနည်းလမ်းဖြစ်နိုင်သည်။
+
+#### Run နေသော init container တစ်ခုသို့ Attach လုပ်ခြင်း
+
+`Init container` များသည် များသောအားဖြင့် အချိန်တိုအတွင်းသာ run သောကြောင့် `kubectl attach` သို့မဟုတ် `kubectl exec` ဖြင့် ၎င်းတို့နှင့် အပြန်အလှန်ဆက်သွယ်ရန် ခက်ခဲသည်။ `pod.kiada-init-slow.yaml` manifest file သည် စက္ကန့် ၆၀ ကြာအောင် run သော `init container` တစ်ခုပါဝင်သော `pod` တစ်ခုကို ဖန်တီးသည်။ ၎င်းသည် သင့်အား `container` အတွင်းသို့ ဝင်ရောက်စူးစမ်းလေ့လာရန် အချိန်အလုံအလောက်ပေးသည်။
+
+`Pod` စတင်သောအခါ၊ အောက်ပါ command ဖြင့် `container` တွင် shell တစ်ခု run ပါ-
+
+```bash
+$ kubectl exec -it kiada-init-slow -c init-demo -- sh
+```
+
+သင်သည် `container` ကို အတွင်းမှ စူးစမ်းလေ့လာရန် shell ကို အသုံးပြုနိုင်သော်လည်း၊ အချိန်တိုအတွင်းသာဖြစ်သည်။ `Container` ၏ main process သည် စက္ကန့် ၆၀ အကြာတွင် ထွက်သွားသောအခါ၊ shell process ကိုလည်း terminate လုပ်သွားမည်ဖြစ်သည်။
+
+သင်သည် run နေသော `init container` တစ်ခုသို့ ဝင်ရောက်ခြင်းကို ၎င်းအချိန်မီမပြီးဆုံးနိုင်ဘဲ fail ဖြစ်နေသည့်အခါ အကြောင်းရင်းကို ရှာဖွေလိုမှသာ ပြုလုပ်လေ့ရှိသည်။ ပုံမှန်လည်ပတ်မှုတွင်၊ `kubectl exec` command ကို သင် run နိုင်မီ `init container` သည် terminate ဖြစ်သွားလိမ့်မည်။
+
+## 5.6 Pod များနှင့် အခြား Object များကို ဖျက်ခြင်း
+
+သင်သည် ဤအခန်းနှင့် အခန်း ၂ ရှိ လေ့ကျင့်ခန်းများကို စမ်းသပ်ခဲ့ပါက၊ သင်၏ cluster တွင် `pod` များနှင့် အခြား object အများအပြား ရှိနေလောက်ပြီဖြစ်သည်။ ဤအခန်းကို အဆုံးသတ်ရန်၊ ၎င်းတို့ကို ဖျက်ရန် နည်းလမ်းအမျိုးမျိုးကို သင်လေ့လာရမည်ဖြစ်သည်။ `pod` တစ်ခုကို ဖျက်ခြင်းသည် ၎င်း၏ `container` များကို terminate လုပ်ပြီး ၎င်းတို့ကို node မှ ဖယ်ရှားပါလိမ့်မည်။ `Deployment` object တစ်ခုကို ဖျက်ခြင်းသည် ၎င်း၏ `pod` များကို ဖျက်ပစ်စေပြီး၊ `LoadBalancer-typed Service` တစ်ခုကို ဖျက်ခြင်းသည် load balancer ကို deprovision လုပ်ပါလိမ့်မည် (provision လုပ်ထားခဲ့လျှင်)။
+
+### 5.6.1 Pod တစ်ခုကို အမည်ဖြင့် ဖျက်ခြင်း
+
+Object တစ်ခုကို ဖျက်ရန် အလွယ်ကူဆုံးနည်းလမ်းမှာ `kubectl delete` command တွင် ၎င်း၏အမျိုးအစားနှင့် အမည်ကို သတ်မှတ်ခြင်းဖြစ်သည်။ ဥပမာအားဖြင့်၊ `kiada` `pod` ကို ဖျက်ရန်၊ အောက်ပါ command ကို run ပါ-
+
+```bash
+$ kubectl delete pod kiada
+pod "kiada" deleted
+```
+
+> **အကြံပြုချက်**
+> ပုံမှန်အားဖြင့်၊ `kubectl delete` command သည် object မရှိတော့သည်အထိ စောင့်ဆိုင်းသည်။ စောင့်ဆိုင်းခြင်းကို ကျော်ရန်၊ command ကို `--wait=false` option ဖြင့် run ပါ။
+
+`Pod` သည် ဖျက်သိမ်းနေစဉ်အတွင်း၊ ၎င်း၏ status သည် `Terminating` သို့ ပြောင်းလဲသွားသည်-
+
+```bash
+$ kubectl get po kiada
+NAME    READY   STATUS        RESTARTS   AGE
+kiada   1/1     Terminating   0          35m
+```
+
+`Container` များကို မည်သို့မည်ပုံ shutdown လုပ်သည်ကို အတိအကျသိရှိခြင်းသည် သင်၏ application က ၎င်း၏ client များအတွက် ကောင်းမွန်သောအတွေ့အကြုံကို ပေးလိုပါက အရေးကြီးပါသည်။ ၎င်းကို နောက်အခန်းတွင် ရှင်းပြထားပြီး၊ `pod` နှင့် ၎င်း၏ `container` များ၏ life cycle ကို ပိုမိုနက်ရှိုင်းစွာ လေ့လာပါမည်။
+
+> **မှတ်ချက်**
+> သင် Docker နှင့် ရင်းနှီးပါက၊ `pod` တစ်ခုကို ရပ်တန့်ပြီး နောက်မှ ပြန်လည်စတင်နိုင်မလားဟု သင်တွေးတောမိပေမည်။ အဖြေမှာ မရပါဟု ဖြစ်သည်။ Kubernetes တွင်၊ သင်သည် `pod` တစ်ခုကို လုံးဝဖယ်ရှားပြီး နောက်မှ ပြန်လည်ဖန်တီးနိုင်ရုံသာဖြစ်သည်။
+
+#### Pod များစွာကို command တစ်ခုတည်းဖြင့် ဖျက်ခြင်း
+
+`Pod` များစွာကို command တစ်ခုတည်းဖြင့်လည်း သင်ဖျက်နိုင်သည်။ သင် `kiada-init` နှင့် `kiada-init-slow` `pod` များကို run ခဲ့ပါက၊ ၎င်းတို့၏အမည်များကို space ခြားပြီး စာရင်းပြုစုခြင်းဖြင့် ၎င်းတို့နှစ်ခုလုံးကို ဖျက်နိုင်သည်-
+
+```bash
+$ kubectl delete pod kiada-init kiada-init-slow
+```
+
+### 5.6.2 Manifest file မှ Object များကို ဖျက်ခြင်း
+
+သင် object တစ်ခုကို ဖန်တီးခဲ့သည့် manifest file ကို အသုံးပြု၍လည်း ၎င်းကို ဖျက်နိုင်သည်။
+
+`pod.kiada-ssl.yaml` file မှ သင်ဖန်တီးခဲ့သော `kiada-ssl` `pod` ကို အောက်ပါ command ဖြင့် ဖျက်နိုင်သည်-
+
+```bash
+$ kubectl delete -f pod.kiada-ssl.yaml
+pod "kiada-ssl" deleted
+```
+
+သင်၏ကိစ္စတွင်၊ file တွင် `pod` object တစ်ခုတည်းသာ ပါဝင်သော်လည်း၊ application တစ်ခုလုံးကို ကိုယ်စားပြုသော အမျိုးအစားအမျိုးမျိုးရှိ object များစွာပါဝင်သည့် file များကို သင်တွေ့ရလေ့ရှိသည်။ ၎င်းသည် application ကို deploy လုပ်ခြင်းနှင့် ဖယ်ရှားခြင်းကို `kubectl apply -f app.yaml` နှင့် `kubectl delete -f app.yaml` ကို execute လုပ်ရုံဖြင့် လွယ်ကူစေသည်။
+
+#### Manifest file များစွာမှ Object များကို ဖျက်ခြင်း
+
+တစ်ခါတစ်ရံ၊ application တစ်ခုကို manifest file များစွာတွင် သတ်မှတ်ထားသည်။ သင်သည် file များကို ကော်မာဖြင့် ခွဲခြားခြင်းဖြင့် file များစွာကို သတ်မှတ်နိုင်သည်-
+
+```bash
+$ kubectl delete -f pod.kiada.yaml,pod.kiada-ssl.yaml
+```
+
+> **မှတ်ချက်**
+> သင်သည် ဤ syntax ကို အသုံးပြု၍ file များစွာကို တစ်ချိန်တည်းတွင် apply လုပ်နိုင်သည် (ဥပမာ- `kubectl apply -f pod.kiada.yaml,pod.kiada-ssl.yaml`)။
+
+ကျွန်တော်သည် Kubernetes ကို အသုံးပြုมาသည့် နှစ်များတစ်လျှောက် ဤချဉ်းကပ်မှုကို အမှန်တကယ် မသုံးเคยသော်လည်း၊ directory တစ်ခုလုံးရှိ manifest file အားလုံးကို deploy လုပ်လေ့ရှိသည်။ `kubectl delete` command ဖြင့်လည်း ထိုသို့ပြုလုပ်နိုင်သည်။ သင်၏ manifest file အားလုံးကို `my-app/` directory တွင် ထားရှိပါက၊ ၎င်းတို့ကို အောက်ပါအတိုင်း သင်ဖျက်နိုင်သည်-
+
+```bash
+$ kubectl delete -f my-app/
+```
+
+> **မှတ်ချက်**
+> သင်၏ manifest file များကို subdirectory များတွင် သိမ်းဆည်းထားပါက၊ `--recursive` flag (သို့မဟုတ် `-R`) ကို အသုံးပြုရမည်။
+
+### 5.6.3 Pod အားလုံးကို ဖျက်ခြင်း
+
+သင်သည် `kiada-stdin` နှင့် အခန်း ၃ တွင် `kubectl create deployment` command ကို အသုံးပြု၍ ဖန်တီးခဲ့သော `pod` များမှလွဲ၍ `pod` အားလုံးကို ဖယ်ရှားပြီးဖြစ်သည်။ သင် deployment ကို scale လုပ်ပုံပေါ်မူတည်၍ ဤ `pod` အချို့သည် run နေဆဲဖြစ်သင့်သည်-
+
+```bash
+$ kubectl get pods
+NAME                     READY   STATUS    RESTARTS   AGE
+kiada-stdin              1/1     Running   0          10m
+kiada-9d785b578-58vhc    1/1     Running   0          1d
+kiada-9d785b578-jmnj8    1/1     Running   0          1d
+```
+
+ဤ `pod` များကို အမည်ဖြင့် ဖျက်မည့်အစား၊ `--all` option ကို အသုံးပြု၍ ၎င်းတို့အားလုံးကို ဖျက်နိုင်သည်-
+
+```bash
+$ kubectl delete po --all
+pod "kiada-stdin" deleted
+pod "kiada-9d785b578-58vhc" deleted
+pod "kiada-9d785b578-jmnj8" deleted
+```
+
+ယခု `kubectl get pods` command ကို ထပ်မံ execute လုပ်ခြင်းဖြင့် `pod` များမရှိတော့ကြောင်း အတည်ပြုပါ-
+
+```bash
+$ kubectl get po
+NAME                     READY   STATUS    RESTARTS   AGE
+kiada-9d785b578-cc6tk    1/1     Running   0          13s
+kiada-9d785b578-h4gml    1/1     Running   0          13s
+```
+
+သင်သည် `pod` များကို ဖျက်လိုက်သော်လည်း၊ `pod` အသစ်များသည် ချက်ချင်းပေါ်လာသည်ကို တွေ့ရသောကြောင့် သင်အံ့အားသင့်သွားပေမည်။ ၎င်းမှာ `Deployment` object ၏ တစိတ်တပိုင်းအဖြစ် သင်ဖန်တီးခဲ့သော `pod` များကြောင့်ဖြစ်သည်။ `Deployment` object များကို အသက်ဝင်လာစေရန် တာဝန်ရှိသော controller သည် object တွင် သတ်မှတ်ထားသော လိုချင်သော replica အရေအတွက်နှင့် `pod` အရေအတွက် အမြဲတမ်းကိုက်ညီစေရန် သေချာစေရမည်။ သင် `Deployment` နှင့် ဆက်စပ်နေသော `pod` တစ်ခုကို ဖျက်လိုက်သောအခါ၊ controller သည် ပျောက်ဆုံးသွားသော `pod` နေရာတွင် `pod` အသစ်တစ်ခုကို ချက်ချင်းဖန်တီးသည်။
+
+ဤ `pod` များကို ဖျက်ရန်၊ သင်သည် `Deployment` ကို zero သို့ scale လုပ်ရမည် သို့မဟုတ် object ကို လုံးဝဖျက်ပစ်ရမည်။ ၎င်းသည် သင်ဤ deployment သို့မဟုတ် ၎င်း၏ `pod` များ သင်၏ cluster တွင် မရှိစေလိုတော့ကြောင်း ညွှန်ပြသည်။
+
+### 5.6.4 "all" keyword ကို အသုံးပြု၍ Object များကို ဖျက်ခြင်း
+
+သင်ယခုအချိန်အထိ ဖန်တီးခဲ့သမျှအရာအားလုံး - deployment, ၎င်း၏ `pod` များ, နှင့် service အပါအဝင် - ကို အောက်ပါ command ဖြင့် ဖျက်နိုင်သည်-
+
+```bash
+$ kubectl delete all --all
+pod "kiada-9d785b578-cc6tk" deleted
+pod "kiada-9d785b578-h4gml" deleted
+service "kubernetes" deleted
+service "kiada" deleted
+deployment.apps "kiada" deleted
+replicaset.apps "kiada-9d785b578" deleted
+```
+
+Command ရှိ ပထမ `all` သည် object အမျိုးအစားအားလုံးကို ဖျက်လိုကြောင်း ညွှန်ပြသည်။ `--all` option သည် ထိုအမျိုးအစားများ၏ instance အားလုံးကို ဖျက်လိုကြောင်း ညွှန်ပြသည်။
+
+`all` keyword သည် သင်၏ namespace ရှိ အဖြစ်များသော၊ namespaced resource type အများစုအတွက် အတိုကောက်တစ်ခုဖြစ်ကြောင်း သတိပြုရန် အရေးကြီးသည်။ `kubectl api-resources` command ဖြင့် မည်သည့် resource များကို `all` တွင် ထည့်သွင်းထားသည်ကို သင်ကြည့်ရှုနိုင်သည်။ `Event` object kind သည် ဤအရာ၏ ဥပမာတစ်ခုဖြစ်သည်။
+
+> **မှတ်ချက်**
+> သင်သည် `delete` command တွင် object type များစွာကို သတ်မှတ်နိုင်သည်။ ဥပမာအားဖြင့်၊ သင်သည် `kubectl delete events,all --all` ကို အသုံးပြု၍ `all` တွင်ပါဝင်သော object kind အားလုံးနှင့်အတူ event များကို ဖျက်နိုင်သည်။
+
+## 5.7 အနှစ်ချုပ်
+
+ဤအခန်းတွင် သင်လေ့လာခဲ့သည်မှာ-
+
+*   `Pod` များသည် `container` တစ်ခု သို့မဟုတ် တစ်ခုထက်ပို၍ အတူတကွရှိသော အုပ်စုအဖြစ် run သည်။ ၎င်းတို့သည် deployment နှင့် horizontal scaling ၏ unit ဖြစ်သည်။
+*   ပုံမှန် `container` တစ်ခုသည် process တစ်ခုတည်းသာ run သည်။ Sidecar `container` များသည် `pod` ရှိ primary `container` ကို ဖြည့်စွက်ပေးသည်။
+*   `Container` များသည် အတူတကွ run ရန် လိုအပ်မှသာ တူညီသော `pod` ၏ အစိတ်အပိုင်းဖြစ်သင့်သည်။ Frontend နှင့် backend process များသည် တစ်ခုချင်းစီ scale လုပ်နိုင်ရန် သီးခြား `pod` များတွင် run သင့်သည်။
+*   `Pod` တစ်ခုစတင်သောအခါ၊ ၎င်း၏ `init` `container` များသည် တစ်ခုပြီးတစ်ခု run သည်။ နောက်ဆုံး `init` `container` ပြီးဆုံးသောအခါ၊ `pod` ၏ main `container` များကို စတင်သည်။ သင်သည် `init` `container` ကို `pod` ကို အတွင်းမှ configure လုပ်ရန်၊ ၎င်း၏ main `container` များ၏ startup ကို ကြိုတင်လိုအပ်ချက်တစ်ခု ပြည့်မီသည်အထိ နှောင့်နှေးရန်၊ သို့မဟုတ် `pod` စတင်တော့မည်ဖြစ်ကြောင်း external service တစ်ခုကို အသိပေးရန် အသုံးပြုနိုင်သည်။
+*   `kubectl apply -f <file>` command သည် object များကို ဖန်တီးပြီး update လုပ်ရန် declarative နည်းလမ်းဖြစ်သည်။
+*   `kubectl port-forward` command သည် သင်၏ local computer မှ `pod` တစ်ခုသို့ port forwarding ကို enable လုပ်သည်။
+*   `kubectl logs` command သည် `container` တစ်ခု၏ log များကို ပြသသည်။
+*   `kubectl cp` command သည် file များကို သင်၏ local computer နှင့် `container` တစ်ခုအကြား copy ကူးသည်။
+*   `kubectl exec` command သည် `container` တွင် command တစ်ခုကို execute လုပ်သည်။
+*   `kubectl attach` command သည် run နေသော `container` ရှိ main process ၏ standard stream များနှင့် ချိတ်ဆက်သည်။
+*   `kubectl delete` command သည် object များကို ဖျက်ရန် အသုံးပြုသည်။ Controller (ဥပမာ `Deployment`) မှ စီမံခန့်ခွဲသော `pod` များကို ဖျက်ရန်၊ သင်သည် controller ကိုယ်တိုင်ကို ဖျက်ရမည်။
