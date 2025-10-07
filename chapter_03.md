@@ -42,7 +42,7 @@ FROM node:16
 COPY app.js /app.js
 COPY html /html
 ENTRYPOINT ["node", "app.js"]
-
+```
 Container Image ကို တည်ဆောက်ခြင်း
 
 အောက်ပါ command ကို အသုံးပြု၍ image ကို တည်ဆောက်ပြီး kiada:latest ဟု tag ပေးပါ။
