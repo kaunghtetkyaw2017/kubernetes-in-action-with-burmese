@@ -386,3 +386,133 @@ Events:
 သင်တွေ့မြင်ရသည့်အတိုင်း၊ `kubectl describe` command သည် သင်ယခင်က `Node` object ၏ YAML manifest တွင် တွေ့ရှိခဲ့သော အချက်အလက်အားလုံးကို ပိုမိုဖတ်ရှုရလွယ်ကူသောပုံစံဖြင့် ပြသသည်။ သင်သည် အမည်၊ IP address၊ နှင့် hostname၊ condition များနှင့် node ၏ capacity ကို ကြည့်ရှုနိုင်သည်။
 
 `describe` command သည် node ပေါ်တွင် run နေသော pod များနှင့် node နှင့် သက်ဆိုင်သော event များကဲ့သို့ ဆက်စပ်နေသော အခြား object များကိုလည်း ပြသသည်။ ဤအချက်အလက်သည် node ၏ status တွင် မပါဝင်ပါ။ `kubectl` သည် အခြား resource များကို query လုပ်ခြင်းဖြင့် ၎င်းကို ရယူသည်။
+
+## 4.3 Event object များမှတစ်ဆင့် cluster event များကို စောင့်ကြည့်ခြင်း
+
+Controller များသည် object တစ်ခု၏ အမှန်တကယ် state ကို object ၏ `spec` field တွင် သတ်မှတ်ထားသော လိုချင်သော state နှင့် ညီညွတ်အောင် ပြန်လည်ညှိနှိုင်းသည့် တာဝန်ကို လုပ်ဆောင်သည့်အခါ၊ ၎င်းတို့ ဘာလုပ်ခဲ့သည်ကို ဖော်ပြရန် event များကို ထုတ်ပေးပါသည်။ Event အမျိုးအစားနှစ်မျိုးရှိသည်- `Normal` နှင့် `Warning`။ `Warning` အမျိုးအစား event များကို controller များက object ကို ညှိနှိုင်းခြင်းမှ တားဆီးသည့်အရာတစ်ခုခု ရှိသည့်အခါ ထုတ်ပေးလေ့ရှိသည်။ ဤ event အမျိုးအစားကို စောင့်ကြည့်ခြင်းဖြင့်၊ cluster ကြုံတွေ့နေရသော ပြဿနာများကို လျင်မြန်စွာ သိရှိနိုင်သည်။
+
+### 4.3.1 Event object ကို မိတ်ဆက်ခြင်း
+
+Kubernetes ရှိ အခြားအရာများကဲ့သို့ပင်၊ event များကို Kubernetes API မှတစ်ဆင့် ဖန်တီးပြီး ဖတ်ရှုသည့် `Event` object များဖြင့် ကိုယ်စားပြုသည်။ အောက်ပါပုံတွင် ပြထားသည့်အတိုင်း၊ ၎င်းတို့တွင် object တစ်ခုနှင့် ပတ်သက်၍ ဘာဖြစ်ခဲ့သည်၊ event ၏ source က ဘာလဲဆိုသည့် အချက်အလက်များ ပါဝင်သည်။ အခြား object များနှင့် မတူဘဲ၊ Kubernetes API object များအတွက် data store ဖြစ်သော `etcd` ပေါ်ရှိ ဝန်ထုပ်ဝန်ပိုးကို လျှော့ချရန်အတွက် `Event` object တစ်ခုစီကို ၎င်းဖန်တီးပြီး တစ်နာရီအကြာတွင် ဖျက်ပစ်သည်။
+
+*ပုံ ၄.၇။ Event object များ၊ controller များနှင့် ၎င်းတို့ စီမံခန့်ခွဲသော object များအကြား ဆက်စပ်မှု*
+
+*   Controller တစ်ခုသည် object ကို စီမံခန့်ခွဲသည်။ ၎င်းသည် object ၏ spec ကိုဖတ်ပြီး ၎င်း၏ status ကို update လုပ်သည်။
+*   Controller သည် ၎င်းလုပ်ဆောင်ခဲ့သော လုပ်ဆောင်ချက်များနှင့် ဖြစ်ပေါ်ခဲ့နိုင်သည့် အရေးကြီးသော state အပြောင်းအလဲများကို ဖော်ပြသည့် `Event` object များကို ထုတ်ပေးသည်။
+*   `Event` object တစ်ခုစီသည် ၎င်းသက်ဆိုင်သည့် object instance နှင့် ၎င်းကို ထုတ်ပေးသည့် controller ကို သတ်မှတ်သည်။
+*   Cluster ရှိ object အရေအတွက်ပေါ်မူတည်၍ event အရေအတွက်များစွာ အဆက်မပြတ် ထုတ်ပေးနေပြီး `etcd` store ပေါ်တွင် သိသာသော ဝန်ထုပ်ဝန်ပိုး ဖြစ်စေသည်။ ပြဿနာကို လျော့ပါးစေရန်၊ `Event` object တစ်ခုစီကို ၎င်းဖန်တီးပြီး တစ်နာရီအကြာတွင် ဖယ်ရှားသည်။
+
+> **မှတ်ချက်**
+> Event များကို ထိန်းသိမ်းထားရမည့် အချိန်ပမာဏကို API server ၏ command-line option များမှတစ်ဆင့် configure လုပ်နိုင်သည်။
+
+#### `kubectl get events` ကို အသုံးပြု၍ event များကို စာရင်းပြုစုခြင်း
+
+`kubectl describe` က ပြသသော event များသည် သင် command ၏ argument အဖြစ် သတ်မှတ်သော object နှင့် သက်ဆိုင်သည်။ ၎င်းတို့၏ သဘောသဘာဝနှင့် object တစ်ခုအတွက် event များစွာကို အချိန်တိုအတွင်း ဖန်တီးနိုင်ခြင်းကြောင့်၊ ၎င်းတို့သည် object ၏ အစိတ်အပိုင်းမဟုတ်ပါ။ ၎င်းတို့ကို object ၏ YAML manifest တွင် သင်ရှာမတွေ့နိုင်ပါ၊ အကြောင်းမှာ ၎င်းတို့သည် `Node` များနှင့် သင်တွေ့ခဲ့ဖူးသော အခြား object များကဲ့သို့ပင် ကိုယ်ပိုင်တည်ရှိနေသောကြောင့် ဖြစ်သည်။
+
+> **မှတ်ချက်**
+> သင်သည် ဤကဏ္ဍရှိ လေ့ကျင့်ခန်းများကို သင့်ကိုယ်ပိုင် cluster တွင် လိုက်လုပ်လိုပါက၊ event များ `etcd` တွင် ရှိနေလောက်အောင် လတ်တလောဖြစ်စေရန် node များထဲမှ တစ်ခုကို restart လုပ်ရန် လိုအပ်နိုင်ပါသည်။ သင်ထိုသို့မလုပ်နိုင်ပါက စိတ်မပူပါနှင့်၊ ဤလေ့ကျင့်ခန်းများကို ကိုယ်တိုင်လုပ်ဆောင်ခြင်းမှ ကျော်သွားလိုက်ပါ။ အကြောင်းမှာ သင်သည် နောက်အခန်းရှိ လေ့ကျင့်ခန်းများတွင် event များကို ထုတ်ပေးပြီး စစ်ဆေးရမည်ဖြစ်သောကြောင့် ဖြစ်သည်။
+
+`Event` များသည် သီးခြား object များဖြစ်သောကြောင့်၊ ၎င်းတို့ကို `kubectl get events` ဖြင့် စာရင်းပြုစုနိုင်သည်-
+
+```bash
+$ kubectl get ev
+LAST SEEN   TYPE      REASON                    OBJECT                  MESSAGE
+48s         Normal    Starting                  node/kind-worker2       Starting kubelet.
+48s         Normal    NodeAllocatableEnforced   node/kind-worker2       Updated Node Allocatable
+48s         Normal    NodeHasSufficientMemory   node/kind-worker2       Node kind-worker2 status is now: NodeHasSufficientMemory
+48s         Normal    NodeHasNoDiskPressure     node/kind-worker2       Node kind-worker2 status is now: NodeHasNoDiskPressure
+48s         Normal    NodeHasSufficientPID      node/kind-worker2       Node kind-worker2 status is now: NodeHasSufficientPID
+47s         Normal    Starting                  node/kind-worker2       Starting kube-proxy...
+```
+
+> **မှတ်ချက်**
+> ယခင် listing သည် `events` အစား အတိုကောက်အမည် `ev` ကို အသုံးပြုထားသည်။
+
+Listing တွင်ပြထားသော event အချို့သည် Node ၏ status condition များနှင့် ကိုက်ညီသည်ကို သင်သတိပြုမိပါလိမ့်မည်။ ဤသို့ဖြစ်လေ့ရှိသော်လည်း၊ နောက်ထပ် event များကိုလည်း သင်တွေ့ရပါမည်။ `Starting` ဟူသော reason နှင့် event နှစ်ခုသည် ထိုကဲ့သို့သော ဥပမာများဖြစ်သည်။ ဤကိစ္စတွင်၊ ၎င်းတို့သည် Kubelet နှင့် Kube Proxy component များကို စတင်လိုက်ပြီဖြစ်ကြောင်း ညွှန်ပြသည်။
+
+#### Event object တစ်ခုတွင် ပါဝင်သော အချက်အလက်များကို နားလည်ခြင်း
+
+`Event` object တစ်ခုတွင် အောက်ပါ field များပါဝင်သည်-
+
+| Field      | Description                                                                                                                            |
+| :--------- | :------------------------------------------------------------------------------------------------------------------------------------- |
+| **Name**       | ဤ `Event` object instance ၏ အမည်။ API မှ object ကို ရယူလိုမှသာ အသုံးဝင်သည်။                                                              |
+| **Type**       | Event ၏ အမျိုးအစား။ `Normal` သို့မဟုတ် `Warning` ဖြစ်နိုင်သည်။                                                                             |
+| **Reason**     | Event ဖြစ်ပွားရခြင်း၏ machine-facing description ဖြစ်သည်။                                                                                |
+| **Source**     | ဤ event ကို report တင်သည့် component။ ၎င်းသည် များသောအားဖြင့် controller တစ်ခုဖြစ်သည်။                                                      |
+| **Object**     | Event က ရည်ညွှန်းသော object instance။ ဥပမာ `node/xyz`။                                                                                |
+| **Sub object** | Event က ရည်ညွှန်းသော sub-object။ ဥပမာ pod ၏ မည်သည့် container ဖြစ်သည်ကို ဖော်ပြသည်။                                                        |
+| **Message**    | Event ၏ human-facing description ဖြစ်သည်။                                                                                             |
+| **First seen** | ဤ event ပထမဆုံး ဖြစ်ပွားသည့်အချိန်။ `Event` object တစ်ခုစီကို ခဏအကြာတွင် ဖျက်ပစ်သည်ကို သတိရပါ၊ ထို့ကြောင့် ၎င်းသည် event အမှန်တကယ် ပထမဆုံးဖြစ်ပွားသည့် အကြိမ်မဟုတ်နိုင်ပါ။ |
+| **Last seen**  | Event များသည် မကြာခဏ ထပ်ခါထပ်ခါ ဖြစ်ပွားတတ်သည်။ ဤ field သည် ဤ event နောက်ဆုံးဖြစ်ပွားသည့် အချိန်ကို ညွှန်ပြသည်။                               |
+| **Count**      | ဤ event ဖြစ်ပွားခဲ့သည့် အကြိမ်အရေအတွက်။                                                                                                 |
+
+> **အကြံပြုချက်**
+> ဤစာအုပ်တစ်လျှောက် လေ့ကျင့်ခန်းများ ပြီးဆုံးသည့်အခါ၊ သင်၏ object များထဲမှ တစ်ခုကို အပြောင်းအလဲလုပ်တိုင်း `kubectl get events` command ကို run ကြည့်ခြင်းသည် အသုံးဝင်နိုင်ပါသည်။ ၎င်းသည် မျက်နှာပြင်နောက်ကွယ်တွင် ဘာတွေဖြစ်ပျက်နေသည်ကို လေ့လာရန် ကူညီပေးပါလိမ့်မည်။
+
+#### Warning event များကိုသာ ပြသခြင်း
+
+သင်ဖော်ပြနေသော object နှင့် သက်ဆိုင်သော event များကိုသာ ပြသသည့် `kubectl describe` command နှင့် မတူဘဲ၊ `kubectl get events` command သည် event အားလုံးကို ပြသသည်။ သင်စိုးရိမ်သင့်သော event များရှိမရှိ စစ်ဆေးလိုပါက ၎င်းသည် အသုံးဝင်ပါသည်။ `Normal` type event များကို လျစ်လျူရှုပြီး `Warning` type event များကိုသာ အာရုံစိုက်လိုပေမည်။
+
+API သည် `field selector` ဟုခေါ်သော mechanism မှတစ်ဆင့် object များကို filter လုပ်ရန် နည်းလမ်းတစ်ခု ပေးထားသည်။ သတ်မှတ်ထားသော field သည် သတ်မှတ်ထားသော selector value နှင့် ကိုက်ညီသော object များကိုသာ ပြန်ပေးသည်။ သင်သည် `Warning` event များကိုသာ ပြသရန် ၎င်းကို အသုံးပြုနိုင်သည်။ `kubectl get` command သည် `--field-selector` option ဖြင့် field selector ကို သတ်မှတ်ခွင့်ပြုသည်။ `Warning` များကို ကိုယ်စားပြုသော event များကိုသာ စာရင်းပြုစုရန်၊ အောက်ပါ command ကို run ပါ-
+
+```bash
+$ kubectl get ev --field-selector type=Warning
+```
+
+### 4.3.2 Event object တစ်ခု၏ manifest အပြည့်အစုံကို ပြသခြင်း
+
+သင့် cluster ရှိ event များကို စစ်ဆေးရန်၊ `kubectl describe` နှင့် `kubectl get events` command များသည် လုံလောက်သင့်သည်။ အခြား object များနှင့် မတူဘဲ၊ `Event` object တစ်ခု၏ YAML အပြည့်အစုံကို ပြသရန် ဘယ်တော့မှ လိုအပ်မည်မဟုတ်ပါ။ သို့သော် API က ပြန်ပေးသော Kubernetes object manifest များနှင့် ပတ်သက်၍ စိတ်အနှောင့်အယှက်ဖြစ်စရာတစ်ခုကို ပြသရန် ဤအခွင့်အရေးကို ကျွန်ုပ်အသုံးပြုလိုပါသည်။
+
+#### Event object များတွင် spec နှင့် status section များ မရှိပါ
+
+`Event` object ၏ ဖွဲ့စည်းပုံကို လေ့လာရန် `kubectl explain` ကို အသုံးပြုပါက၊ ၎င်းတွင် `spec` သို့မဟုတ် `status` section များ မရှိသည်ကို သင်သတိပြုမိပါလိမ့်မည်။ ကံမကောင်းစွာဖြင့်၊ ၎င်းသည် ၎င်း၏ field များကို `Node` object ကဲ့သို့ ကောင်းမွန်စွာ စုစည်းထားခြင်းမရှိဟု ဆိုလိုသည်။ ဥပမာအားဖြင့်၊ အောက်ပါ YAML ကို စစ်ဆေးပြီး object ၏ kind, metadata, နှင့် အခြား field များကို အလွယ်တကူ ရှာဖွေနိုင်မလား ကြည့်ပါ။
+
+```yaml
+apiVersion: v1                                             #A
+count: 1
+eventTime: null
+firstTimestamp: "2020-05-17T18:16:40Z"
+involvedObject:
+  kind: Node
+  name: kind-worker2
+  uid: kind-worker2
+kind: Event                                                #B
+lastTimestamp: "2020-05-17T18:16:40Z"
+message: Starting kubelet.
+metadata:                                                  #C
+  name: kind-worker2.1610a1206f4f910f
+  namespace: default
+  ...
+reason: Starting
+reportingComponent: ""
+reportingInstance: ""
+source:
+  component: kubelet
+  host: kind-worker2
+type: Normal
+```
+
+*   **A** `apiVersion` သည် အပေါ်ဆုံးတွင် ရှိသည်။
+*   **B** `kind` field သည် အလယ်တစ်နေရာတွင် ရှိသည်။
+*   **C** `metadata` field သည် `message` field ၏နောက်တွင် ရှိသည်။
+
+API server မှ ပြန်ပေးသော object manifest များရှိ field များသည် အက္ခရာစဉ်အတိုင်း စီထားသည်။ ၎င်းတို့သည် မျှော်လင့်ထားသည့်အတိုင်း အုပ်စုဖွဲ့ထားခြင်းမရှိပါ။ ၎င်းသည် လူသားများအတွက် ဖတ်ရှုရန် ခက်ခဲစေသည်။ ၎င်းသည် အလွန်ရှုပ်ထွေးနေသောကြောင့် လူအများအပြား Kubernetes YAML သို့မဟုတ် JSON manifest များနှင့် ဆက်ဆံရခြင်းကို မုန်းတီးကြသည်မှာ အံ့သြစရာမရှိပါ၊ အကြောင်းမှာ နှစ်မျိုးလုံးသည် ဤပြဿနာကို ခံစားနေရသောကြောင့်ဖြစ်သည်။
+
+ဆန့်ကျင်ဘက်အားဖြင့်၊ `Node` object ၏ အစောပိုင်း YAML manifest သည် top-level field များ၏ အစီအစဉ်သည် လူတစ်ဦး မျှော်လင့်ထားသည့်အတိုင်းဖြစ်သောကြောင့် ဖတ်ရှုရန် အတော်လေးလွယ်ကူသည်- `apiVersion`, `kind`, `metadata`, `spec`, နှင့် `status`။ သင်သတိပြုမိလိမ့်မည်မှာ၊ ဤငါးခု၏ အက္ခရာစဉ်သည် အဓိပ္ပာယ်ရှိနေသောကြောင့်သာ ဖြစ်သည်။ သို့သော် ထို field များအောက်ရှိ field များသည် တူညီသောပြဿနာကို ခံစားနေရသည်၊ အကြောင်းမှာ ၎င်းတို့ကိုလည်း အက္ခရာစဉ်အတိုင်း စီထားသောကြောင့်ဖြစ်သည်။
+
+YAML သည် လူများဖတ်ရှုရန် လွယ်ကူစေရန် ရည်ရွယ်သော်လည်း၊ Kubernetes YAML ရှိ အက္ခရာစဉ် field အစီအစဉ်သည် ဤအချက်ကို ချိုးဖောက်သည်။ ကံကောင်းထောက်မစွာ၊ object အများစုတွင် `spec` နှင့် `status` section များပါဝင်သောကြောင့်၊ အနည်းဆုံး ဤ object များရှိ top-level field များသည် ကောင်းမွန်စွာ စုစည်းထားသည်။ ကျန်အရာများအတွက်မူ၊ Kubernetes manifest များနှင့် ဆက်ဆံရာတွင် ဤကံမကောင်းသောအချက်ကို သင်လက်ခံရုံသာ ရှိပါလိမ့်မည်။
+
+## 4.4 အနှစ်ချုပ်
+
+ဤအခန်းတွင် သင်လေ့လာခဲ့သည်မှာ-
+
+*   Kubernetes API object များသည် cluster ၏ configuration ကို ကိုယ်စားပြုသည်။ သင်သည် cluster ၏ အပြုအမူကို ပြောင်းလဲလိုသောအခါ၊ သင်သည် ဤ object များကို ပြင်ဆင်မွမ်းမံသည်။
+*   object တစ်ခုတွင် `Type Metadata`, `Object Metadata`, `spec` (သင် object ဖြစ်စေလိုသော desired state), နှင့် `status` (object ၏ actual current state) တို့ ပါဝင်သည်။
+*   Controller များသည် object ၏ `spec` ကို ဖတ်ပြီး ၎င်းကို အသက်ဝင်လာစေရန် လုပ်ဆောင်ချက်များကို လုပ်ဆောင်သည်။ ၎င်းတို့သည် object ၏ `status` ကို ရေးသားခြင်းဖြင့် ၎င်းတို့၏ အလုပ်၏ state ကို report တင်သည်။
+*   `kubectl describe` command သည် object တစ်ခု၏ လူသားများဖတ်ရှုရန်လွယ်ကူသော အကျဉ်းချုပ်ကို ပေးသည်။ ၎င်းသည် object နှင့် သက်ဆိုင်သော event များကိုလည်း ပြသသည်။
+*   `kubectl get -o yaml` (သို့မဟုတ် `-o json`) command သည် object ၏ manifest အပြည့်အစုံကို ပြသသည်။
+*   Controller များသည် Kubernetes API object များကို စီမံခန့်ခွဲသည့်အခါ၊ ၎င်းတို့လုပ်ဆောင်ခဲ့သော လုပ်ဆောင်ချက်များကို ဖော်ပြရန် event များကို ထုတ်လွှင့်သည်။ အရာအားလုံးကဲ့သို့ပင်၊ event များကို `Event` object များဖြင့် ကိုယ်စားပြုပြီး API မှတစ်ဆင့် ရယူနိုင်သည်။ Event များသည် `Node` သို့မဟုတ် အခြား object တစ်ခုခုတွင် ဘာတွေဖြစ်ပျက်နေသည်ကို ညွှန်ပြသည်။ ၎င်းတို့သည် object နှင့်ပတ်သက်၍ မကြာသေးမီက ဖြစ်ပျက်ခဲ့သောအရာများကို ပြသပြီး ၎င်းဘာကြောင့် ပျက်စီးနေသည်ကို ညွှန်ပြချက်များ ပေးနိုင်ပါသည်။
+*   `kubectl explain` command သည် command line မှ object kind တစ်ခုနှင့် ၎င်း၏ field များအကြောင်း documentation ကို လျင်မြန်စွာ ကြည့်ရှုရန် နည်းလမ်းတစ်ခု ပေးသည်။
+*   `Node` object တစ်ခု၏ `status` တွင် node ၏ IP address နှင့် hostname၊ ၎င်း၏ resource capacity၊ condition များ၊ cached container image များနှင့် node အကြောင်း အခြားအချက်အလက်များ ပါဝင်သည်။ node ပေါ်တွင် run နေသော Pod များသည် node ၏ status ၏ အစိတ်အပိုင်းမဟုတ်ပါ၊ သို့သော် `kubectl describe node` command သည် ဤအချက်အလက်ကို pod resource မှ ရယူသည်။
+*   Object type များစွာသည် object က ကိုယ်စားပြုသော component ၏ state ကို ညွှန်ပြရန် status condition များကို အသုံးပြုသည်။ node များအတွက်၊ ဤ condition များမှာ `MemoryPressure`, `DiskPressure` နှင့် `PIDPressure` တို့ဖြစ်သည်။
