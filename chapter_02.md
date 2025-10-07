@@ -1,129 +1,112 @@
 # အခန်း (၂) Container များကို နားလည်ခြင်း
 
-**ဤအခန်းတွင် ပါဝင်သောအကြောင်းအရာများ**
+**ဤအခန်းတွင် လေ့လာရမည့်အကြောင်းအရာများ**
 
-* Container ဆိုသည်မှာ အဘယ်နည်းကို နားလည်ခြင်း
-* Container များနှင့် virtual machine များကြား ကွာခြားချက်များ
-* Docker ဖြင့် container image တစ်ခုကို ဖန်တီးခြင်း၊ run ခြင်းနှင့် မျှဝေခြင်း
-* Container များကို ဖြစ်ပေါ်စေသော Linux kernel feature များ
+* Container ဆိုသည်မှာ အဘယ်နည်း။
+* Container နှင့် Virtual Machine (VM) တို့၏ ကွာခြားချက်များ။
+* Docker ကို အသုံးပြု၍ Container Image တစ်ခုကို ဖန်တီးခြင်း၊ အသုံးပြုခြင်း နှင့် မျှဝေခြင်း။
+* Container များကို ဖြစ်ပေါ်စေသည့် Linux Kernel ၏ နည်းပညာများ။
 
-Kubernetes သည် အဓိကအားဖြင့် container များထဲတွင် run နေသော application များကို စီမံခန့်ခွဲပါသည် - ထို့ကြောင့် Kubernetes ကို မစူးစမ်းမီ၊ container ဆိုသည်မှာ အဘယ်နည်းကို ကောင်းစွာနားလည်ထားရန် လိုအပ်ပါသည်။ ဤအခန်းသည် ပုံမှန် Kubernetes အသုံးပြုသူတစ်ဦး သိထားရန်လိုအပ်သော Linux container များ၏ အခြေခံများကို ရှင်းပြပါမည်။
+Kubernetes သည် အဓိကအားဖြင့် container များအတွင်းတွင် အလုပ်လုပ်သော application များကို စီမံခန့်ခွဲပါသည်။ ထို့ကြောင့် Kubernetes ကို အသေးစိတ်မလေ့လာမီ၊ container ဆိုသည်မှာ အဘယ်နည်းကို ကောင်းစွာနားလည်ထားရန် အလွန်အရေးကြီးပါသည်။ ဤအခန်းတွင် ပုံမှန် Kubernetes အသုံးပြုသူတစ်ဦး သိရှိထားသင့်သော Linux container များ၏ အခြေခံသဘောတရားများကို ရှင်းလင်းတင်ပြပါမည်။
 
-## 2.1 Container များကို မိတ်ဆက်ခြင်း
+## 2.1 Container များအား မိတ်ဆက်ခြင်း
 
-အခန်း ၁ တွင် တူညီသော operating system ထဲတွင် run နေသော မတူညီသည့် microservice များသည် မတူညီသော၊ တစ်ခါတစ်ရံ ပဋိပက္ခဖြစ်နိုင်သော dynamically linked library version များကို မည်သို့လိုအပ်နိုင်သည် သို့မဟုတ် မတူညီသော environment လိုအပ်ချက်များ ရှိနိုင်သည်ကို သင်လေ့လာခဲ့ပြီးဖြစ်သည်။
+အခန်း (၁) တွင် သင်လေ့လာခဲ့သည့်အတိုင်း၊ operating system တစ်ခုတည်းတွင် အလုပ်လုပ်နေသော microservice များသည် တစ်ခုနှင့်တစ်ခု မတူညီသော သို့မဟုတ် ပဋိပက္ခဖြစ်နိုင်သော library version များကို လိုအပ်နိုင်ပါသည်။
 
-System တစ်ခုတွင် application အနည်းငယ်သာ ပါဝင်သည့်အခါ၊ application တစ်ခုချင်းစီအတွက် သီးသန့် virtual machine တစ်လုံး သတ်မှတ်ပေးပြီး တစ်ခုချင်းစီကို ၎င်း၏ကိုယ်ပိုင် operating system တွင် run ခြင်းသည် အဆင်ပြေပါသည်။ သို့သော် microservice များ သေးငယ်လာပြီး ၎င်းတို့၏ အရေအတွက် တိုးပွားလာသည့်အခါ၊ သင်၏ hardware ကုန်ကျစရိတ်ကို နည်းပါးအောင် ထိန်းသိမ်းလိုပြီး အရင်းအမြစ်များကို မဖြုန်းတီးလိုပါက တစ်ခုချင်းစီကို ၎င်း၏ကိုယ်ပိုင် VM ပေးရန် မတတ်နိုင်တော့ပေ။
+System တစ်ခုတွင် application အနည်းငယ်သာရှိပါက၊ application တစ်ခုချင်းစီအတွက် သီးသန့် virtual machine (VM) တစ်လုံးစီ ခွဲဝေချထားပေးပြီး ကိုယ်ပိုင် operating system တွင် အလုပ်လုပ်စေခြင်း нь ပုံမှန်ဖြစ်ပါသည်။ သို့သော် microservice များ သေးငယ်လာပြီး အရေအတွက်များပြားလာသောအခါ၊ hardware ကုန်ကျစရိတ်ကို ထိန်းချုပ်ရန်နှင့် အရင်းအမြစ်များ မဖြုန်းတီးစေရန်အတွက် microservice တစ်ခုချင်းစီကို VM တစ်လုံးစီပေးရန် မဖြစ်နိုင်တော့ပါ။
 
-၎င်းသည် hardware အရင်းအမြစ်များကို ဖြုန်းတီးခြင်းကိစ္စတစ်ခုတည်းသာ မဟုတ်ပါ - VM တစ်ခုချင်းစီကို ပုံမှန်အားဖြင့် တစ်ခုချင်း configure လုပ်ပြီး စီမံခန့်ခွဲရန် လိုအပ်သည်၊ ဆိုလိုသည်မှာ VM အရေအတွက်များများ run ခြင်းသည် ဝန်ထမ်းလိုအပ်ချက်များ မြင့်မားလာခြင်းနှင့် ပိုမိုကောင်းမွန်ပြီး၊ မကြာခဏ ပိုမိုရှုပ်ထွေးသော automation system တစ်ခု လိုအပ်လာခြင်းတို့ကို ဖြစ်ပေါ်စေသည်။ System များသည် deploy လုပ်ထားသော application instance ရာပေါင်းများစွာဖြင့် ဖွဲ့စည်းထားသည့် microservice architecture များသို့ ပြောင်းလဲလာမှုကြောင့်၊ VM များအတွက် အစားထိုးစရာတစ်ခု လိုအပ်လာပါသည်။ Container များသည် ထိုအစားထိုးစရာပင် ဖြစ်သည်။
+၎င်းသည် hardware အရင်းအမြစ်များ ဖြုန်းတီးခြင်းမျှသာမက၊ VM တစ်ခုချင်းစီကို သီးခြားစီ configure လုပ်ပြီး စီမံခန့်ခွဲရန် လိုအပ်သောကြောင့် VM အရေအတွက်များပြားလာသည်နှင့်အမျှ ဝန်ထမ်းအင်အားနှင့် ပိုမိုရှုပ်ထွေးသော automation system များလည်း လိုအပ်လာပါသည်။ microservice architecture များသို့ ပြောင်းလဲလာခြင်းကြောင့် VM များအတွက် အခြားရွေးချယ်စရာတစ်ခု လိုအပ်လာပြီး၊ ထိုအရာမှာ Container များပင် ဖြစ်သည်။
 
 ### 2.1.1 Container များကို Virtual Machine များနှင့် နှိုင်းယှဉ်ခြင်း
 
-Microservice တစ်ခုချင်းစီ၏ environment များကို သီးခြားခွဲထုတ်ရန် (သို့မဟုတ် ယေဘုယျအားဖြင့် software process များကို) virtual machine များ အသုံးပြုမည့်အစား၊ ယခုအခါ development နှင့် operations အဖွဲ့အများစုသည် container များကို အသုံးပြုရန် ပိုမိုနှစ်သက်ကြသည်။ ၎င်းတို့သည် service အများအပြားကို တူညီသော host computer ပေါ်တွင် run နိုင်စေပြီး တစ်ခုနှင့်တစ်ခု သီးခြားခွဲထုတ်ထားနိုင်စေသည်။ VM များကဲ့သို့ပင်၊ သို့သော် overhead ပိုနည်းပါသည်။
+ယခုအခါတွင် development နှင့် operations အဖွဲ့များသည် microservice တစ်ခုချင်းစီ၏ environment ကို သီးခြားခွဲထုတ် (isolate) ရန် virtual machine များအစား container များကို ပိုမိုအသုံးပြုလာကြသည်။ Container များသည် service အများအပြားကို host computer တစ်လုံးတည်းတွင် အလုပ်လုပ်စေနိုင်ပြီး၊ တစ်ခုနှင့်တစ်ခု သီးခြားစီဖြစ်နေစေရန် ထိန်းသိမ်းပေးနိုင်သည်။ ၎င်းသည် VM များနှင့် ဆင်တူသော်လည်း overhead (အပိုဝန်) အလွန်နည်းပါးပါသည်။
 
-VM တစ်ခုချင်းစီသည် သီးခြား operating system တစ်ခုနှင့် system process အများအပြားကို run သည့် VM များနှင့်မတူဘဲ၊ container တစ်ခုထဲတွင် run နေသော process သည် ရှိပြီးသား host operating system အတွင်းတွင် run ပါသည်။ Operating system တစ်ခုတည်းသာ ရှိသောကြောင့်၊ ထပ်နေသော system process များ မရှိပါ။ Application process များအားလုံးသည် တူညီသော operating system ထဲတွင် run နေသော်လည်း၊ ၎င်းတို့၏ environment များကို သီးခြားခွဲထုတ်ထားသည်၊ သို့သော် ၎င်းတို့ကို သီးခြား VM များတွင် run သည့်အခါကဲ့သို့ ကောင်းစွာခွဲထုတ်ထားခြင်း မရှိပါ။ Container ထဲရှိ process အတွက်၊ ဤသို့ သီးခြားခွဲထုတ်ထားခြင်းက ကွန်ပျူတာပေါ်တွင် အခြား process များမရှိသကဲ့သို့ ဖြစ်စေသည်။ ၎င်းမည်သို့ ဖြစ်နိုင်သည်ကို နောက်အပိုင်းများတွင် သင်လေ့လာရမည်ဖြစ်သော်လည်း၊ ပထမဦးစွာ container များနှင့် virtual machine များကြားရှိ ကွာခြားချက်များကို ပိုမိုနက်ရှိုင်းစွာ လေ့လာကြပါစို့။
+VM တစ်ခုချင်းစီသည် သီးခြား operating system တစ်ခုနှင့် system process အများအပြားကို run ရသော်လည်း၊ container အတွင်းရှိ process သည် host computer ၏ operating system ထဲတွင်ပင် အလုပ်လုပ်ပါသည်။ operating system တစ်ခုတည်းသာရှိသောကြောင့် system process များ ထပ်ซ้อนနေခြင်းမရှိပါ။ application process များအားလုံးသည် OS တစ်ခုတည်းတွင် အလုပ်လုပ်နေသော်လည်း၊ ၎င်းတို့၏ environment များကို သီးခြားခွဲထုတ်ထားပါသည်။ သို့သော် ၎င်းသည် VM များလောက်တော့ isolation မကောင်းပါ။
 
-**Container များနှင့် Virtual Machine များ၏ overhead ကို နှိုင်းယှဉ်ခြင်း**
+**Container နှင့် Virtual Machine တို့၏ Overhead (အပိုဝန်) နှိုင်းယှဉ်ချက်**
 
-VM များနှင့် နှိုင်းယှဉ်ပါက၊ container များသည် သီးခြား resource pool သို့မဟုတ် အပို OS-level process များ မလိုအပ်သောကြောင့် ပိုမိုပေါ့ပါးပါသည်။ VM တစ်ခုချင်းစီသည် များသောအားဖြင့် ၎င်း၏ကိုယ်ပိုင် system process အစုံကို run သောကြောင့် user application ၏ ကိုယ်ပိုင် process မှ သုံးစွဲသည့် resource များအပြင် အပို computing resource များ လိုအပ်သော်လည်း၊ container တစ်ခုသည် ရှိပြီးသား host OS ထဲတွင် run နေသော သီးခြား process တစ်ခုသာဖြစ်ပြီး app က သုံးစွဲသည့် resource များကိုသာ သုံးစွဲပါသည်။ ၎င်းတို့တွင် overhead လုံးဝနီးပါး မရှိပါ။
+VM များနှင့် နှိုင်းယှဉ်လျှင် container များသည် အပို resource pool သို့မဟုတ် OS-level process များ မလိုအပ်သောကြောင့် အလွန်ပေါ့ပါးပါသည်။ VM တစ်လုံးသည် ကိုယ်ပိုင် system process များကို run ရန် အပို computing resource များ လိုအပ်သော်လည်း၊ container သည် host OS အတွင်းရှိ သီးခြား process တစ်ခုမျှသာဖြစ်ပြီး application က သုံးစွဲသည့် resource များကိုသာ အသုံးပြုသည်။ ၎င်းတို့တွင် overhead လုံးဝနီးပါးမရှိပါ။
 
-**ပုံ 2.1 Application အုပ်စုများကို သီးခြားခွဲထုတ်ရန် VM များအသုံးပြုခြင်း နှင့် application တစ်ခုချင်းစီကို container များဖြင့် သီးခြားခွဲထုတ်ခြင်း**
+**ပုံ 2.1: Application အုပ်စုများကို ခွဲထုတ်ရန် VM များအသုံးပြုခြင်း နှင့် Application တစ်ခုချင်းစီကို ခွဲထုတ်ရန် Container များအသုံးပြုခြင်း**
 
-VM များ၏ resource overhead ကြောင့်၊ သင်သည် application အများအပြားကို VM တစ်ခုချင်းစီထဲသို့ မကြာခဏ အုပ်စုဖွဲ့ထည့်သွင်းပါသည်။ App တစ်ခုချင်းစီအတွက် VM တစ်ခုလုံးကို သီးသန့်ပေးရန် သင်မတတ်နိုင်ပေ။ သို့သော် container များသည် overhead မရှိသောကြောင့်၊ application တစ်ခုချင်းစီအတွက် သီးခြား container တစ်ခု ဖန်တီးရန် သင်တတ်နိုင်ပါသည်။ အမှန်တကယ်တွင်၊ container တစ်ခုတည်းတွင် application အများအပြားကို ဘယ်တော့မှ မ run သင့်ပါ၊ အဘယ်ကြောင့်ဆိုသော် ၎င်းသည် container ထဲရှိ process များကို စီမံခန့်ခွဲရန် ပိုမိုခက်ခဲစေသောကြောင့်ဖြစ်သည်။ ထို့အပြင်၊ Kubernetes အပါအဝင် container များနှင့် ပတ်သက်သည့် ရှိပြီးသား software အားလုံးသည် container တစ်ခုတွင် application တစ်ခုတည်းသာ ရှိသည်ဟူသော အ前提အောက်တွင် ဒီဇိုင်းပြုလုပ်ထားပါသည်။ သို့သော် နောက်အခန်းတွင် သင်လေ့လာရမည့်အတိုင်း၊ Kubernetes သည် ဆက်စပ် application များကို အတူတကွ run ရန် နည်းလမ်းတစ်ခု ပံ့ပိုးပေးသော်လည်း ၎င်းတို့ကို သီးခြား container များတွင် ဆက်လက်ထားရှိပါသည်။
+VM များ၏ resource overhead ကြောင့် application အများအပြားကို VM တစ်ခုထဲတွင် စုပေါင်းထည့်သွင်းလေ့ရှိသည်။ သို့သော် container များတွင် overhead မရှိသောကြောင့် application တစ်ခုချင်းစီအတွက် သီးခြား container တစ်ခု ဖန်တီးနိုင်သည်။ အမှန်မှာ၊ container တစ်ခုတည်းတွင် application တစ်ခုထက်ပို၍ မ run သင့်ပါ။ Kubernetes အပါအဝင် container ဆိုင်ရာ software အားလုံးသည် container တစ်ခုတွင် application တစ်ခုသာရှိသည်ဟူသော အခြေခံမူပေါ်တွင် ဒီဇိုင်းပြုလုပ်ထားပါသည်။
 
-**Container များနှင့် Virtual Machine များ၏ start-up time ကို နှိုင်းယှဉ်ခြင်း**
+**Container နှင့် Virtual Machine တို့၏ Start-up Time (စတင်ချိန်) နှိုင်းယှဉ်ချက်**
 
-Runtime overhead နည်းပါးခြင်းအပြင်၊ container များသည် application ကို ပိုမိုမြန်ဆန်စွာ စတင်နိုင်သည်၊ အဘယ်ကြောင့်ဆိုသော် application process ကိုယ်တိုင်ကိုသာ စတင်ရန် လိုအပ်သောကြောင့်ဖြစ်သည်။ Virtual machine အသစ်တစ်ခုကို boot တက်သည့်အခါကဲ့သို့ အပို system process များကို ဦးစွာစတင်ရန် မလိုအပ်ပါ။
+overhead နည်းပါးသည့်အပြင်၊ container များသည် application process ကိုသာ စတင်ရန်လိုအပ်သောကြောင့် VM များထက် application ကို ပိုမိုမြန်ဆန်စွာ စတင်နိုင်သည်။ VM အသစ်တစ်ခုကို boot တက်သကဲ့သို့ အပို system process များကို စတင်ရန်မလိုအပ်ပါ။
 
-**Container များနှင့် Virtual Machine များ၏ isolation ကို နှိုင်းယှဉ်ခြင်း**
+**Container နှင့် Virtual Machine တို့၏ Isolation (သီးခြားခွဲထုတ်ခြင်း) နှိုင်းယှဉ်ချက်**
 
-Resource အသုံးပြုမှုနှင့် ပတ်သက်လာလျှင် container များက ပိုကောင်းသည်မှာ ရှင်းလင်းကြောင်း သင်သဘောတူပါလိမ့်မည်၊ သို့သော် အားနည်းချက်တစ်ခုလည်း ရှိပါသည်။ သင်သည် application များကို virtual machine များတွင် run သည့်အခါ၊ VM တစ်ခုချင်းစီသည် ၎င်း၏ကိုယ်ပိုင် operating system နှင့် kernel ကို run ပါသည်။ ထို VM များအောက်တွင် hypervisor (နှင့် ဖြစ်နိုင်လျှင် အပို operating system တစ်ခု) ရှိပြီး၊ ၎င်းသည် physical hardware resource များကို VM တစ်ခုချင်းစီရှိ operating system က အသုံးပြုနိုင်သည့် virtual resource အစုံငယ်များအဖြစ် ခွဲဝေပေးပါသည်။
+Resource အသုံးပြုမှုတွင် container များက သာလွန်သော်လည်း အားနည်းချက်တစ်ခုရှိပါသည်။ VM များသည် ကိုယ်ပိုင် kernel တစ်ခုစီဖြင့် အလုပ်လုပ်သောကြောင့် လုံးဝ သီးခြားဖြစ်နေသော်လည်း၊ container များအားလုံးသည် host OS ၏ kernel တစ်ခုတည်းကို မျှဝေသုံးစွဲကြသည်။
 
-**ပုံ 2.2 App များသည် VM တွင် run သည့်အခါ နှင့် container တွင် run သည့်အခါ hardware ကို မည်သို့အသုံးပြုပုံ**
+**ပုံ 2.2: VM နှင့် Container အတွင်းရှိ App များ Hardware ကို အသုံးပြုပုံ**
 
-> **မှတ်ချက်**
-> Hypervisor အမျိုးအစား နှစ်မျိုးရှိသည်။ Type 1 hypervisor များသည် host OS run ရန် မလိုအပ်သော်လည်း၊ type 2 hypervisor များက လိုအပ်သည်။
+> **မှတ်ချက်**: Hypervisor နှစ်မျိုးရှိသည်။ Type 1 သည် host OS မလိုအပ်သော်လည်း Type 2 က လိုအပ်သည်။
 
-အခြားတစ်ဖက်တွင်၊ container များအားလုံးသည် host OS ထဲတွင် run နေသော kernel တစ်ခုတည်းပေါ်တွင် system call များ ပြုလုပ်ကြသည်။ ဤ kernel တစ်ခုတည်းသည် host ၏ CPU ပေါ်တွင် instruction များကို execute လုပ်သော တစ်ခုတည်းသောအရာဖြစ်သည်။ CPU သည် VM များနှင့်အတူ လုပ်ဆောင်ရသကဲ့သို့ virtualization မျိုးကို ကိုင်တွယ်ရန် မလိုအပ်ပါ။
+**ပုံ 2.3: Application များကို Bare Metal၊ VM နှင့် Container များတွင် အလုပ်လုပ်ပုံ ကွာခြားချက်**
 
-**ပုံ 2.3 Application များကို bare metal ပေါ်တွင်၊ virtual machine များတွင်၊ နှင့် container များတွင် run ခြင်း၏ ကွာခြားချက်**
+ပုံတွင် မြင်တွေ့ရသည့်အတိုင်း၊ container များသည် kernel တစ်ခုတည်းကို မျှဝေသုံးစွဲသော်လည်း kernel ၏ နည်းပညာများက ၎င်းတို့ကို တစ်ခုနှင့်တစ်ခု သီးခြားဖြစ်နေစေရန် ကူညီပေးသည်။ Application တစ်ခုချင်းစီသည် ကိုယ်ပိုင် OS တွင် အလုပ်လုပ်နေသကဲ့သို့ ခံစားရသည်။
 
-ပထမကိစ္စတွင်၊ application သုံးခုလုံးသည် တူညီသော kernel ကို အသုံးပြုပြီး သီးခြားခွဲထုတ်ထားခြင်း မရှိပါ။ ဒုတိယကိစ္စတွင်၊ application A နှင့် B သည် တူညီသော VM တွင် run ပြီး kernel ကို မျှဝေသုံးစွဲကြသော်လည်း၊ application C သည် ၎င်း၏ကိုယ်ပိုင် kernel ကို အသုံးပြုသောကြောင့် အခြားနှစ်ခုမှ လုံးဝ သီးခြားခွဲထုတ်ထားပါသည်။ ၎င်းသည် hardware ကို ပထမနှစ်ခုနှင့်သာ မျှဝေသုံးစွဲပါသည်။
+**Container Isolation ၏ Security သက်ရောက်မှုများ**
 
-တတိယကိစ္စသည် တူညီသော application သုံးခုကို container များတွင် run နေသည်ကို ပြသပါသည်။ ၎င်းတို့အားလုံးသည် တူညီသော kernel ကို အသုံးပြုသော်လည်း၊ ၎င်းတို့သည် တစ်ခုနှင့်တစ်ခု သီးခြားခွဲထုတ်ထားပြီး အခြားသူများ၏ တည်ရှိမှုကို လုံးဝ မသိရှိကြပါ။ သီးခြားခွဲထုတ်ခြင်းကို kernel ကိုယ်တိုင်က ပံ့ပိုးပေးပါသည်။ Application တစ်ခုချင်းစီသည် physical hardware ၏ အစိတ်အပိုင်းတစ်ခုကိုသာ မြင်တွေ့ရပြီး ၎င်းတို့အားလုံးသည် တူညီသော OS ထဲတွင် run နေသော်လည်း၊ OS ထဲတွင် run နေသော တစ်ခုတည်းသော process အဖြစ် ၎င်းကိုယ်တိုင်ကို မြင်တွေ့ရပါသည်။
+VM များ၏ အဓိကအားသာချက်မှာ kernel တစ်ခုစီဖြင့် လုံးဝသီးခြားဖြစ်နေခြင်းဖြစ်ပြီး၊ container များက kernel တစ်ခုတည်းကို မျှဝေသုံးစွဲသောကြောင့် security risk ရှိနိုင်သည်။ kernel တွင် bug တစ်ခုရှိပါက container တစ်ခုမှ application သည် အခြား container များ၏ memory ကို ဝင်ရောက်ဖတ်ရှုနိုင်သည်။ ထို့အပြင်၊ container တစ်ခုက memory အားလုံးကို အလွန်အကျွံသုံးစွဲပါက အခြား container များကို ထိခိုက်နိုင်သည်။ Kubernetes တွင်မူ node များပေါ်၌ swap ကို disable လုပ်ထားသောကြောင့် ဤပြဿနာကို ကာကွယ်ထားသည်။
 
-**Container isolation ၏ security-implication များကို နားလည်ခြင်း**
+**Container နှင့် VM တို့ကို ဖြစ်ပေါ်စေသော နည်းပညာများ**
 
-Container များထက် virtual machine များ အသုံးပြုခြင်း၏ အဓိကအားသာချက်မှာ VM တစ်ခုချင်းစီတွင် ၎င်း၏ကိုယ်ပိုင် Linux kernel ရှိသောကြောင့် ၎င်းတို့ ပံ့ပိုးပေးသော လုံးဝသီးခြားခွဲထုတ်မှုဖြစ်ပြီး၊ container များအားလုံးသည် တူညီသော kernel ကို အသုံးပြုကြသည်။ ၎င်းသည် security risk တစ်ခု ဖြစ်စေနိုင်သည်မှာ ရှင်းလင်းပါသည်။ အကယ်၍ kernel တွင် bug တစ်ခုရှိပါက၊ container တစ်ခုရှိ application တစ်ခုသည် ၎င်းကို အသုံးပြု၍ အခြား container များရှိ application များ၏ memory ကို ဖတ်ရှုနိုင်ပေမည်။ App များသည် မတူညီသော VM များတွင် run ပြီး hardware ကိုသာ မျှဝေသုံးစွဲပါက၊ ထိုသို့သော တိုက်ခိုက်မှုများ၏ ဖြစ်နိုင်ခြေသည် ပိုမိုနည်းပါးပါသည်။
+VM များကို CPU ၏ virtualization support နှင့် hypervisor software တို့ဖြင့် ဖြစ်ပေါ်စေပြီး၊ container များကိုမူ Linux kernel ကိုယ်တိုင်က ပံ့ပိုးပေးသော နည်းပညာများဖြင့် ဖြစ်ပေါ်စေပါသည်။
 
-ထို့အပြင်၊ container များသည် memory space ကို မျှဝေသုံးစွဲကြပြီး၊ VM တစ်ခုချင်းစီသည် ၎င်း၏ကိုယ်ပိုင် memory အပိုင်းကို အသုံးပြုပါသည်။ ထို့ကြောင့်၊ container တစ်ခု အသုံးပြုနိုင်သော memory ပမာဏကို သင်ကန့်သတ်မထားပါက၊ ၎င်းသည် အခြား container များ memory ကုန်ဆုံးသွားစေခြင်း သို့မဟုတ် ၎င်းတို့၏ data များကို disk သို့ swap out လုပ်စေခြင်းတို့ကို ဖြစ်စေနိုင်ပါသည်။
+### 2.1.2 Docker Container Platform ကို မိတ်ဆက်ခြင်း
 
-> **မှတ်ချက်**
-> Kubernetes တွင် ဤသို့မဖြစ်နိုင်ပါ၊ အဘယ်ကြောင့်ဆိုသော် ၎င်းသည် node အားလုံးတွင် swap ကို disable လုပ်ရန် လိုအပ်သောကြောင့်ဖြစ်သည်။
+Container နည်းပညာများသည် Docker ကြောင့် ကျယ်ပြန့်စွာ လူသိများလာခဲ့သည်။ Docker သည် application နှင့် ၎င်း၏လိုအပ်သော library များ၊ dependency များအားလုံးကို Docker-enabled computer တိုင်းတွင် အလွယ်တကူ deploy လုပ်နိုင်သည့် package တစ်ခုအဖြစ် ထုပ်ပိုးခြင်းကို ရိုးရှင်းလွယ်ကူစေခဲ့သည်။
 
-**Container များကို ဖြစ်ပေါ်စေသောအရာ နှင့် Virtual Machine များကို ဖြစ်ပေါ်စေသောအရာကို နားလည်ခြင်း**
+**Container, Image နှင့် Registry တို့ကို မိတ်ဆက်ခြင်း**
 
-Virtual machine များကို CPU ရှိ virtualization support နှင့် host ပေါ်ရှိ virtualization software မှတစ်ဆင့် ဖြစ်ပေါ်စေသော်လည်း၊ container များကို Linux kernel ကိုယ်တိုင်က ဖြစ်ပေါ်စေပါသည်။
+Docker သည် application များကို ထုပ်ပိုးခြင်း (packaging)၊ ဖြန့်ဝေခြင်း (distributing) နှင့် အသုံးပြုခြင်း (running) တို့အတွက် platform တစ်ခုဖြစ်သည်။
 
-### 2.1.2 Docker container platform ကို မိတ်ဆက်ခြင်း
+**ပုံ 2.4: Docker ၏ အဓိက သဘောတရားသုံးခု - Image, Registry, Container**
 
-Container နည်းပညာများသည် အချိန်ကြာမြင့်စွာ တည်ရှိခဲ့သော်လည်း၊ Docker ၏ ထွန်းကားလာမှုနှင့်အတူ ၎င်းတို့သည် တွင်ကျယ်စွာ လူသိများလာခဲ့သည်။ Docker သည် ၎င်းတို့ကို မတူညီသော ကွန်ပျူတာများအကြား လွယ်ကူစွာ သယ်ဆောင်နိုင်စေသည့် ပထမဆုံး container system ဖြစ်သည်။ ၎င်းသည် application နှင့် ၎င်း၏ library များ၊ အခြား dependency များအားလုံး - OS file system တစ်ခုလုံးပင်လျှင် - ကို Docker run နေသော မည်သည့် ကွန်ပျူတာပေါ်တွင်မဆို application ကို deploy လုပ်ရန် အသုံးပြုနိုင်သည့် ရိုးရှင်းပြီး၊ သယ်ဆောင်ရလွယ်ကူသော package တစ်ခုအဖြစ် ထုပ်ပိုးသည့် လုပ်ငန်းစဉ်ကို ရိုးရှင်းစေခဲ့သည်။
+* **Images (Image များ)**: Container image သည် သင်၏ application နှင့် ၎င်း၏ environment ကို ထုပ်ပိုးထားသည့် အရာဖြစ်သည်။ ၎င်းတွင် application အတွက်လိုအပ်သော file system နှင့် application ကို မည်သို့ run ရမည် စသည့် metadata များ ပါဝင်သည်။
+* **Registries (Registry များ)**: Registry သည် container image များကို သိမ်းဆည်းထားသည့် repository ဖြစ်ပြီး လူအများအကြား image များကို ဖလှယ်နိုင်စေသည်။
+* **Containers (Container များ)**: Container ကို image မှတစ်ဆင့် ဖန်တီးသည်။ run နေသော container သည် host OS အတွင်းရှိ သီးခြား process တစ်ခုဖြစ်ပြီး၊ ၎င်း၏ environment ကို host နှင့် အခြား process များမှ ခွဲထုတ်ထားသည်။
 
-**Container များ၊ Image များနှင့် Registry များကို မိတ်ဆက်ခြင်း**
+**Container Image တစ်ခုကို တည်ဆောက်ခြင်း၊ ဖြန့်ဝေခြင်းနှင့် အသုံးပြုခြင်း**
 
-Docker သည် application များကို ထုပ်ပိုးခြင်း၊ ဖြန့်ဝေခြင်းနှင့် run ခြင်းအတွက် platform တစ်ခုဖြစ်သည်။ အစောပိုင်းတွင် ဖော်ပြခဲ့သည့်အတိုင်း၊ ၎င်းသည် သင်၏ application ကို ၎င်း၏ environment တစ်ခုလုံးနှင့်အတူ ထုပ်ပိုးနိုင်စေပါသည်။ ၎င်းသည် app မှ လိုအပ်သော dynamically linked library အနည်းငယ်သာ ဖြစ်နိုင်သည်၊ သို့မဟုတ် operating system တစ်ခုနှင့်အတူ ပုံမှန်အားဖြင့် တင်ပို့သော file များအားလုံး ဖြစ်နိုင်သည်။ Docker သည် ဤ package ကို public repository မှတစ်ဆင့် အခြား Docker-enabled ကွန်ပျူတာတိုင်းသို့ ဖြန့်ဝေနိုင်စေပါသည်။
+Developer တစ်ဦးသည် container image ကို တည်ဆောက်ပြီး registry သို့ push (upload) လုပ်သည်။ ထို့နောက် အခြားသူတစ်ဦးက ထို image ကို pull (download) လုပ်ပြီး မည်သည့် Docker-enabled computer တွင်မဆို run နိုင်သည်။
 
-**ပုံ 2.4 Docker ၏ အဓိက concept သုံးခုမှာ image များ၊ registry များနှင့် container များဖြစ်သည်**
+* **ပုံ 2.5: Container image တည်ဆောက်ခြင်း**
+* **ပုံ 2.6: Container image ကို registry သို့ upload လုပ်ခြင်း**
+* **ပုံ 2.7: Container ကို အခြား computer တွင် run ခြင်း**
 
-ပုံ 2.4 သည် ကျွန်တော် vừa ရှင်းပြခဲ့သော လုပ်ငန်းစဉ်တွင် ပေါ်ပေါက်လာသည့် Docker ၏ အဓိက concept သုံးခုကို ပြသပါသည်။ ဤသည်မှာ ၎င်းတို့တစ်ခုချင်းစီ၏ အဓိပ္ပာယ်ဖြစ်သည်-
+**Image Layers (Image အလွှာများ) ကို နားလည်ခြင်း**
 
-* **Image များ**- Container image ဆိုသည်မှာ သင်၏ application နှင့် ၎င်း၏ environment ကို ထုပ်ပိုးထည့်သွင်းသည့်အရာဖြစ်သည်။ zip file သို့မဟုတ် tarball ကဲ့သို့ဖြစ်သည်။ ၎င်းတွင် application က အသုံးပြုမည့် filesystem တစ်ခုလုံးနှင့် image ကို execute လုပ်သည့်အခါ run ရန် executable file သို့ path၊ application က listen လုပ်သည့် port များ၊ နှင့် image အကြောင်း အခြားအချက်အလက်များကဲ့သို့သော အပို metadata များ ပါဝင်ပါသည်။
-* **Registry များ**- Registry ဆိုသည်မှာ မတူညီသော လူများနှင့် ကွန်ပျူတာများအကြား image များကို ဖလှယ်နိုင်စေသည့် container image များ၏ repository တစ်ခုဖြစ်သည်။ သင်၏ image ကို build လုပ်ပြီးနောက်၊ ၎င်းကို တူညီသော ကွန်ပျူတာပေါ်တွင် run နိုင်သည်၊ သို့မဟုတ် image ကို registry သို့ push (upload) လုပ်ပြီးနောက် ၎င်းကို အခြားကွန်ပျူတာသို့ pull (download) လုပ်နိုင်ပါသည်။ အချို့ registry များသည် public ဖြစ်ပြီး မည်သူမဆို ၎င်းမှ image များကို pull လုပ်နိုင်သော်လည်း၊ အချို့မှာ private ဖြစ်ပြီး လိုအပ်သော authentication credential များရှိသော လူပုဂ္ဂိုလ်များ၊ အဖွဲ့အစည်းများ သို့မဟုတ် ကွန်ပျူတာများသာ ဝင်ရောက်နိုင်ပါသည်။
-* **Container များ**- Container တစ်ခုကို container image မှ instantiate လုပ်ပါသည်။ Run နေသော container တစ်ခုသည် host operating system ထဲတွင် run နေသော ပုံမှန် process တစ်ခုဖြစ်သော်လည်း၊ ၎င်း၏ environment သည် host ၏ environment နှင့် အခြား process များ၏ environment များမှ သီးခြားခွဲထုတ်ထားပါသည်။ Container ၏ file system သည် container image မှ မူလအစဖြစ်သော်လည်း၊ အပို file system များကိုလည်း container ထဲသို့ mount လုပ်နိုင်ပါသည်။ Container တစ်ခုသည် များသောအားဖြင့် resource-restricted ဖြစ်သည်၊ ဆိုလိုသည်မှာ ၎င်းသည် ၎င်းအတွက် ခွဲဝေချထားပေးထားသော CPU နှင့် memory ကဲ့သို့သော resource ပမာဏကိုသာ ဝင်ရောက်အသုံးပြုနိုင်ပါသည်။
+Container image များသည် VM image များကဲ့သို့ တစ်ခုတည်းသော ကြီးမားသည့် file မဟုတ်ဘဲ၊ မျှဝေသုံးစွဲနိုင်သော layer (အလွှာ) များဖြင့် ဖွဲ့စည်းထားသည်။ ၎င်းကြောင့် image များကို download လုပ်ရာတွင် ပိုမိုမြန်ဆန်ပြီး storage နေရာကိုလည်း ချွေတာနိုင်သည်။
 
-**Container image တစ်ခုကို build လုပ်ခြင်း၊ ဖြန့်ဝေခြင်း၊ နှင့် run ခြင်း**
+**ပုံ 2.8: Container များ Image Layer များကို မျှဝေသုံးစွဲပုံ**
 
-Container များ၊ image များနှင့် registry များသည် တစ်ခုနှင့်တစ်ခု မည်သို့ဆက်စပ်နေသည်ကို နားလည်ရန်၊ container image တစ်ခုကို build လုပ်ပုံ၊ ၎င်းကို registry မှတစ်ဆင့် ဖြန့်ဝေပုံနှင့် image မှ run နေသော container တစ်ခုကို ဖန်တီးပုံတို့ကို ကြည့်ကြပါစို့။ ဤလုပ်ငန်းစဉ်သုံးခုကို ပုံ 2.5 မှ 2.7 တွင် ပြသထားပါသည်။
+Container များသည် filesystem များကို **Copy-on-Write (CoW)** နည်းလမ်းဖြင့် သီးခြားခွဲထုတ်ထားသည်။ container တစ်ခုသည် မျှဝေထားသော file ကို ပြင်ဆင်သည့်အခါ၊ ထို file ၏ မိတ္တူကို ၎င်း၏ ကိုယ်ပိုင် read/write layer တွင် ဖန်တီးပြီး ပြင်ဆင်သည်။ ဤသို့ဖြင့် အခြား container များက ထိုပြောင်းလဲမှုကို မမြင်ရပါ။
 
-**ပုံ 2.5 Container image တစ်ခုကို build လုပ်ခြင်း**
+> **သတိပေးချက်**: File permission သို့မဟုတ် ownership ပြောင်းလဲခြင်းကဲ့သို့သော လုပ်ဆောင်ချက်များသည် file တစ်ခုလုံးကို read/write layer တွင် copy ကူးစေပြီး image အရွယ်အစားကို ကြီးမားစေနိုင်သည်။
 
-**ပုံ 2.6 Container image တစ်ခုကို registry သို့ upload လုပ်ခြင်း**
+**Container Image များ၏ Portability (သယ်ဆောင်နိုင်စွမ်း) ကန့်သတ်ချက်များ**
 
-**ပုံ 2.7 Container တစ်ခုကို မတူညီသော ကွန်ပျူတာပေါ်တွင် run ခြင်း**
+Container များသည် ကိုယ်ပိုင် kernel မရှိသောကြောင့်၊ containerized application တစ်ခုသည် သီးခြား kernel version သို့မဟုတ် module တစ်ခုကို လိုအပ်ပါက၊ ၎င်းသည် computer တိုင်းတွင် အလုပ်လုပ်နိုင်မည်မဟုတ်ပါ။
 
-**Application က မြင်တွေ့ရသော environment ကို နားလည်ခြင်း**
+**ပုံ 2.9: သီးခြား kernel feature များ လိုအပ်သော container သည် နေရာတိုင်းတွင် အလုပ်မလုပ်နိုင်ပါ**
 
-သင်သည် application တစ်ခုကို container တစ်ခုထဲတွင် run သည့်အခါ၊ ၎င်းသည် သင် container image ထဲသို့ ထုပ်ပိုးထည့်သွင်းထားသော file system content ကို အတိအကျ မြင်တွေ့ရပြီး၊ container ထဲသို့ သင် mount လုပ်သည့် အပို file system များကိုလည်း မြင်တွေ့ရပါသည်။ Application သည် သင်၏ laptop ပေါ်တွင် run သည်ဖြစ်စေ၊ အပြည့်အစုံ production server ပေါ်တွင် run သည်ဖြစ်စေ တူညီသော file များကို မြင်တွေ့ရသည်၊ production server သည် လုံးဝကွဲပြားသော Linux distribution ကို အသုံးပြုနေသော်လည်း ဖြစ်သည်။ Application သည် ပုံမှန်အားဖြင့် host ၏ operating system ရှိ file များကို ဝင်ရောက်ခွင့်မရှိသောကြောင့်၊ server တွင် သင်၏ development ကွန်ပျူတာနှင့် လုံးဝကွဲပြားသော install လုပ်ထားသော library အစုံရှိနေသည်မှာ အရေးမကြီးပါ။
+### 2.1.3 Docker ကို Install လုပ်ပြီး "Hello World" Container ကို Run ကြည့်ခြင်း
 
-**Image layer များကို နားလည်ခြင်း**
+**Docker ကို Install လုပ်ခြင်း**
 
-VM တွင် install လုပ်ထားသော operating system မှ လိုအပ်သော filesystem တစ်ခုလုံး၏ ကြီးမားသော blob များဖြစ်သည့် virtual machine image များနှင့်မတူဘဲ၊ container image များသည် များသောအားဖြင့် ပိုမိုသေးငယ်သော layer များဖြင့် ဖွဲ့စည်းထားပါသည်။ ဤ layer များကို image အများအပြားအကြား မျှဝေသုံးစွဲပြီး ပြန်လည်အသုံးပြုနိုင်ပါသည်။ ဆိုလိုသည်မှာ image တစ်ခု၏ အချို့ layer များကိုသာ download လုပ်ရန် လိုအပ်သည်၊ အကယ်၍ ကျန် layer များကို တူညီသော layer များပါဝင်သော အခြား image ၏ အစိတ်အပိုင်းအဖြစ် host သို့ download လုပ်ပြီးသားဖြစ်ပါက ဖြစ်သည်။
+Linux computer တွင် Docker ကို တိုက်ရိုက် install လုပ်ခြင်းသည် အကောင်းဆုံးဖြစ်သည်။ macOS သို့မဟုတ် Windows အသုံးပြုသူများအတွက် Docker Desktop application က လိုအပ်သော Linux VM ကို အလိုအလျောက် setup လုပ်ပေးပါလိမ့်မည်။ အသေးစိတ် install လုပ်နည်းကို http://docs.docker.com/install တွင် လေ့လာပါ။
 
-Layer များသည် image ဖြန့်ဝေမှုကို အလွန်ထိရောက်စေသော်လည်း image များ၏ storage footprint ကို လျှော့ချရာတွင်လည်း ကူညီပေးပါသည်။ Docker သည် layer တစ်ခုချင်းစီကို တစ်ကြိမ်သာ သိမ်းဆည်းပါသည်။
+**"Hello World" Container ကို Run ခြင်း**
 
-**ပုံ 2.8 Container များသည် image layer များကို မျှဝေသုံးစွဲနိုင်သည်**
+Docker install ပြီးနောက်၊ `docker` CLI tool ကို အသုံးပြု၍ `busybox` image မှ "Hello World" ကို run ကြည့်ပါ။
 
-Filesystem များကို Copy-on-Write (CoW) mechanism ဖြင့် သီးခြားခွဲထုတ်ထားပါသည်။ Container တစ်ခု၏ filesystem သည် container image မှ read-only layer များနှင့် အပေါ်တွင် stack လုပ်ထားသော အပို read/write layer တစ်ခုဖြင့် ဖွဲ့စည်းထားပါသည်။ Container A တွင် run နေသော application တစ်ခုသည် read-only layer များထဲမှ file တစ်ခုကို ပြောင်းလဲသည့်အခါ၊ file တစ်ခုလုံးကို container ၏ read/write layer သို့ copy လုပ်ပြီး file content များကို ထိုနေရာတွင် ပြောင်းလဲပါသည်။ Container တစ်ခုချင်းစီတွင် ၎င်း၏ကိုယ်ပိုင် writable layer ရှိသောကြောင့်၊ မျှဝေသုံးစွဲထားသော file များသို့ ပြောင်းလဲမှုများသည် အခြား မည်သည့် container တွင်မှ မမြင်တွေ့ရပါ။
-
-> **သတိပေးချက်**
-> File တစ်ခု၏ permission များ သို့မဟုတ် ownership ကို ပြောင်းလဲခြင်းကဲ့သို့သော အန္တရာယ်မရှိဟုထင်ရသော လုပ်ဆောင်ချက်များပင်လျှင် read/write layer တွင် file တစ်ခုလုံး၏ copy အသစ်တစ်ခုကို ဖန်တီးစေပါသည်။ သင်သည် ဤသို့သော လုပ်ဆောင်ချက်ကို ကြီးမားသော file သို့မဟုတ် file အများအပြားပေါ်တွင် လုပ်ဆောင်ပါက၊ image အရွယ်အစားသည် သိသိသာသာ ကြီးထွားလာနိုင်ပါသည်။
-
-**Container image များ၏ portability ကန့်သတ်ချက်များကို နားလည်ခြင်း**
-
-သီအိုရီအရ၊ Docker-based container image တစ်ခုကို Docker run နေသော မည်သည့် Linux ကွန်ပျူတာပေါ်တွင်မဆို run နိုင်သော်လည်း၊ container များတွင် ၎င်းတို့၏ကိုယ်ပိုင် kernel မရှိသောကြောင့် သေးငယ်သော သတိပေးချက်တစ်ခု ရှိပါသည်။ အကယ်၍ containerized application တစ်ခုသည် သီးခြား kernel version တစ်ခုကို လိုအပ်ပါက၊ ၎င်းသည် ကွန်ပျူတာတိုင်းတွင် အလုပ်လုပ်မည်မဟုတ်ပေ။
-
-**ပုံ 2.9 Container တစ်ခုသည် သီးခြား kernel feature များ သို့မဟုတ် module များ လိုအပ်ပါက၊ ၎င်းသည် နေရာတိုင်းတွင် အလုပ်လုပ်မည်မဟုတ်ပေ**
-
-### 2.1.3 Docker ကို install လုပ်ပြီး Hello World container တစ်ခု run ခြင်း
-
-ယခုအခါ container ဆိုသည်မှာ အဘယ်နည်းကို အခြေခံနားလည်ထားသင့်ပြီဖြစ်သောကြောင့်၊ တစ်ခု run ရန် Docker ကို အသုံးပြုကြပါစို့။ သင်သည် Docker ကို install လုပ်ပြီး Hello World container တစ်ခုကို run ရပါမည်။
-
-**Docker ကို install လုပ်ခြင်း**
-
-အကောင်းဆုံးမှာ၊ သင်သည် Docker ကို Linux ကွန်ပျူတာပေါ်တွင် တိုက်ရိုက် install လုပ်သင့်သည်၊ ထိုသို့ဆိုလျှင် သင်၏ host OS အတွင်းတွင် run နေသော VM တစ်ခုအတွင်း container များကို run ခြင်း၏ အပိုရှုပ်ထွေးမှုနှင့် ရင်ဆိုင်ရမည်မဟုတ်ပါ။ သို့သော်၊ သင်သည် macOS သို့မဟုတ် Windows ကို အသုံးပြုနေပြီး Linux VM တစ်ခုကို set up လုပ်နည်း မသိပါက၊ Docker Desktop application သည် ၎င်းကို သင့်အတွက် set up လုပ်ပေးပါလိမ့်မည်။
-
-Docker Platform သည် component များစွာဖြင့် ဖွဲ့စည်းထားသော်လည်း၊ container များကို run ရန် Docker Engine ကိုသာ install လုပ်ရန် လိုအပ်ပါသည်။ အကယ်၍ သင်သည် macOS သို့မဟုတ် Windows ကို အသုံးပြုပါက၊ Docker Desktop ကို install လုပ်ပါ။ အသေးစိတ်အတွက် http://docs.docker.com/install ရှိ ညွှန်ကြားချက်များကို လိုက်နာပါ။
-
-**Hello World container တစ်ခု run ခြင်း**
-
-Installation ပြီးစီးပြီးနောက်၊ Docker command များကို run ရန် `docker` CLI tool ကို အသုံးပြုပါသည်။ Docker Hub မှ ရှိပြီးသား image တစ်ခုကို pull လုပ်ပြီး run ကြည့်ကြပါစို့။ Docker Hub သည် လူသိများသော software package များစွာအတွက် အသင့်သုံး container image များပါဝင်သော public image registry ဖြစ်သည်။ ၎င်းတို့ထဲမှ တစ်ခုမှာ `busybox` image ဖြစ်ပြီး၊ ၎င်းကို သင်၏ ပထမဆုံး container တွင် `echo "Hello world"` command ရိုးရိုးလေးတစ်ခု run ရန် အသုံးပြုပါမည်။
+```bash
+$ docker run busybox echo "Hello World"
+Unable to find image 'busybox:latest' locally
+latest: Pulling from library/busybox
+...
+Status: Downloaded newer image for busybox:latest
+Hello World
