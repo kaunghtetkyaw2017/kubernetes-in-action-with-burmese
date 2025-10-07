@@ -31,8 +31,8 @@ Kiada သည် စာအုပ်ထဲမှ quote များကို ဖ�
 *ပုံ 2.12: Kiada Suite ၏ Architecture နှင့် လုပ်ဆောင်ပုံ*
 *ပုံ 2.13: Plain-text version ၏ လုပ်ဆောင်ပုံ*
 
-### 2.2.2 Application ကို တည်ဆောက်ခြင်း
-**Container Image အတွက် Dockerfile ကို ဖန်တီးခြင်း**
+### 2.2.2 Application ကို တည်ဆောက်ခြင်း (Building the Application)
+**Container Image အတွက် Dockerfile ကို ဖန်တီးခြင်း (Creating a Dockerfile for the Container Image)**
 
 App ကို image အဖြစ်ထုပ်ပိုးရန် Dockerfile လိုအပ်ပါသည်။
 
@@ -43,74 +43,74 @@ COPY app.js /app.js
 COPY html /html
 ENTRYPOINT ["node", "app.js"]
 ```
-Container Image ကို တည်ဆောက်ခြင်း
+**Container Image ကို တည်ဆောက်ခြင်း (Building the Container Image)**
 
 အောက်ပါ command ကို အသုံးပြု၍ image ကို တည်ဆောက်ပြီး kiada:latest ဟု tag ပေးပါ။
 
-Bash
-
+```bash
 $ docker build -t kiada:latest .
+```
 ပုံ 2.14: Dockerfile ကို အသုံးပြု၍ Image တည်ဆောက်ခြင်း
 
-2.2.3 Container ကို Run ခြင်း
+### 2.2.3 Container ကို Run ခြင်း (Running the Container)
 Image တည်ဆောက်ပြီးနောက်၊ အောက်ပါ command ဖြင့် container ကို run နိုင်ပါပြီ။
 
-Bash
-
+```bash
 $ docker run --name kiada-container -p 1234:8080 -d kiada:latest
+```
 ပုံ 2.15: Run နေသော Container ၏ ပုံဖော်ချက်
 
-App ကို ဝင်ရောက်ခြင်း
+**App ကို ဝင်ရောက်ခြင်း (Accessing the App)**
 
 curl သို့မဟုတ် browser ဖြင့် http://localhost:1234 သို့ ဝင်ရောက်ကြည့်ရှုပါ။
 
-Bash
-
+```bash
 $ curl localhost:1234
-2.2.4 Container Image ကို ဖြန့်ဝေခြင်း
+```
+### 2.2.4 Container Image ကို ဖြန့်ဝေခြင်း (Distributing the Container Image)
 Image ကို အခြား computer များတွင် run နိုင်ရန်၊ ၎င်းကို Docker Hub ကဲ့သို့သော registry သို့ push လုပ်ရပါမည်။
 
-Bash
-
+```bash
 # Image ကို သင်၏ Docker Hub ID ဖြင့် tag ပေးပါ
 $ docker tag kiada:latest yourid/kiada:0.1
 # Docker Hub သို့ login ဝင်ပါ
 $ docker login -u yourid docker.io
 # Image ကို push လုပ်ပါ
 $ docker push yourid/kiada:0.1
-2.2.5 Container ကို ရပ်တန့်ခြင်းနှင့် ဖျက်ခြင်း
-Bash
-
+```
+### 2.2.5 Container ကို ရပ်တန့်ခြင်းနှင့် ဖျက်ခြင်း (Stopping and Deleting the Container)
+```bash
 # Container ကို ရပ်ပါ
 $ docker stop kiada-container
 # Container ကို ဖျက်ပါ
 $ docker rm kiada-container
-2.3 Container များ၏ အတွင်းပိုင်းကို နားလည်ခြင်း
-2.3.1 Process ၏ Environment ကို ပြင်ဆင်ရန် Linux Namespaces ကို အသုံးပြုခြင်း
+```
+## 2.3 Container များ၏ အတွင်းပိုင်းကို နားလည်ခြင်း (Understanding the Internals of Containers)
+### 2.3.1 Process ၏ Environment ကို ပြင်ဆင်ရန် Linux Namespaces ကို အသုံးပြုခြင်း (Using Linux Namespaces to Prepare the Process's Environment)
 Linux Namespaces သည် process တစ်ခုချင်းစီကို ကိုယ်ပိုင် system (file system, process ID, network interface စသည်) ရှိသကဲ့သို့ ဖြစ်စေသည်။ ၎င်းသည် container isolation ၏ အဓိက နည်းပညာဖြစ်ပါသည်။
 
 ပုံ 2.16: Network Namespace သည် Process တစ်ခု၏ Network Interface များကို ကန့်သတ်ပုံ
 ပုံ 2.17: Process များ Namespace များကို မျှဝေသုံးစွဲပုံ
 
-2.3.2 Run နေသော Container ၏ Environment ကို စူးစမ်းခြင်း
+### 2.3.2 Run နေသော Container ၏ Environment ကို စူးစမ်းခြင်း (Exploring the Environment of a Running Container)
 docker exec command ကို အသုံးပြု၍ run နေသော container အတွင်းသို့ ဝင်ရောက်ပြီး ၎င်း၏ environment ကို စူးစမ်းနိုင်ပါသည်။
 
-Bash
-
+```bash
 $ docker exec -it kiada-container bash
 root@...:/# ps aux
+```
 ပုံ 2.18: PID Namespace ၏ Process Tree
 
-2.3.3 Process ၏ Resource အသုံးပြုမှုကို Linux Control Groups (cgroups) ဖြင့် ကန့်သတ်ခြင်း
+### 2.3.3 Process ၏ Resource အသုံးပြုမှုကို Linux Control Groups (cgroups) ဖြင့် ကန့်သတ်ခြင်း (Limiting a Process's Resource Usage with Linux Control Groups (cgroups))
 cgroups သည် process တစ်ခု (သို့မဟုတ် container) အသုံးပြုနိုင်သည့် CPU, memory, network bandwidth ကဲ့သို့သော resource များကို ကန့်သတ်ပေးသည်။
 
-Bash
-
+```bash
 # CPU ကို core 0.5 အထိသာ ကန့်သတ်ခြင်း
 $ docker run --cpus="0.5" ...
 # Memory ကို 100MB အထိသာ ကန့်သတ်ခြင်း
 $ docker run --memory="100m" ...
-2.3.4 Container များအကြား Isolation ကို ပိုမိုခိုင်မာစေခြင်း
+```
+### 2.3.4 Container များအကြား Isolation ကို ပိုမိုခိုင်မာစေခြင်း (Strengthening Isolation Between Containers)
 Namespaces နှင့် cgroups များအပြင်၊ အခြားသော Linux kernel နည်းပညာများသည် container များ၏ security ကို ပိုမိုခိုင်မာစေသည်။
 
 Capabilities: Container တစ်ခုကို kernel ၏ system call အချို့ကိုသာ အသုံးပြုခွင့်ပေးခြင်း။
@@ -119,7 +119,7 @@ seccomp: Container တစ်ခု ပြုလုပ်နိုင်သည့
 
 AppArmor နှင့် SELinux: File နှင့် system resource များအပေါ်တွင် ပိုမိုအသေးစိတ်ကျသော access control policy များ ချမှတ်ခြင်း။
 
-2.4 အကျဉ်းချုပ်
+## 2.4 အကျဉ်းချုပ် (Summary)
 ဤအခန်းကို ဖတ်ရှုပြီးနောက် သင်သည် container များ၏ အခြေခံသဘောတရား၊ ၎င်းတို့၏ အလုပ်လုပ်ပုံနှင့် ၎င်းတို့ကို ဖြစ်ပေါ်စေသည့် Linux kernel နည်းပညာများကို နားလည်သွားမည်ဖြစ်သည်။
 
 Container များသည် သီးခြားခွဲထုတ်ထားသော ပုံမှန် process များဖြစ်သည်။
